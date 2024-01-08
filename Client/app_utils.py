@@ -67,9 +67,3 @@ class Client(Thread):
     def run(self):
         client_thread = threading.Thread(target= self.open)
         client_thread.run()
-
-if __name__ == '__main__':
-    a = Client('127.0.0.1', 8008)
-    a.start()
-    a.request_data(1)
-    a.request_data(3)

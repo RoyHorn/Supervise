@@ -199,6 +199,7 @@ class Block(Thread):
             fg= palette['text_color']
         )
 
+        tk.Button(self.root,text = 'exit', command=self.root.destroy).place(rely=0.95,relx=0.12, anchor= 'center')
         message.place(relx = 0.5, rely = 0.45, anchor = 'center')
         limit.place(relx = 0.5, rely = 0.55, anchor = 'center')    
         logo.place(relx = 0.5, rely = 0.9, anchor = 'center')
