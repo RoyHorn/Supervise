@@ -1,9 +1,10 @@
 import socket, threading
+from threading import Thread
 from PIL import Image
 
-
-class Client():
+class Client(Thread):
     def __init__(self, host, port):
+        super().__init__()
         self.host = host  # The server's hostname or IP address
         self.port = port  # The port used by the server
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -13,6 +14,7 @@ class Client():
     def send_receive_messages(self):
         for cmmd, data in self.messages:
             self.client_socket.send(f'{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
+            self.messages.remove((cmmd,data))
             self.receive_messages()
         
     def receive_messages(self):
@@ -52,14 +54,22 @@ class Client():
         if cmmd == '2': #2 - unblock command
             pass #should change blocking label
 
-    def run(self):
+    def close_client(self):
+        self.client_socket.close()
+
+    def open(self):
         '''runs the client, connects to the server'''
         self.client_socket.connect((self.host, self.port))
 
         while True:
             self.send_receive_messages()
 
-    def start(self):
-        client_thread = threading.Thread(target= self.run)
+    def run(self):
+        client_thread = threading.Thread(target= self.open)
         client_thread.run()
 
+if __name__ == '__main__':
+    a = Client('127.0.0.1', 8008)
+    a.start()
+    a.request_data(1)
+    a.request_data(3)
