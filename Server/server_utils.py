@@ -4,6 +4,7 @@ from datetime import datetime
 from PIL import ImageGrab
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
+from icecream import ic
 
 #color paletee
 palette = {
@@ -69,8 +70,85 @@ class ActiveTime(Thread):
         '''prints the current active time and active state'''
         return f'active time: {self.active_time} - is active: {self.is_active}'
 
-class ScreenTime():
-    pass
+class Database:
+    def __init__(self):
+        self.database = 'supervise_db.sqlite'
+
+    def connect_to_db(self):
+        conn = sqlite3.connect(self.database)
+        return (conn ,conn.cursor())
+    
+    def create_user_table(self):
+        conn, cursor = self.connect_to_db()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                ip TEXT PRIMARY KEY NOT NULL
+            )
+        ''')
+        conn.commit()
+        conn.close()
+
+    def insert_user(self, ip):
+        if self.check_user(ip):
+            return
+        self.create_user_table()
+        conn, cursor = self.connect_to_db()
+        cursor.execute('''
+            INSERT INTO users (ip) VALUES (?)
+        ''', (ip,))
+        conn.commit()
+        conn.close()
+
+    def check_user(self, ip):
+        self.create_user_table()
+        conn, cursor = self.connect_to_db()
+        cursor.execute(f'''
+            SELECT * FROM users
+            WHERE ip=(?);
+        ''', (ip,))
+        user_exists = cursor.fetchone() is not None 
+
+        conn.commit()
+        conn.close()
+
+        return user_exists
+
+    def create_screentime_table(self):
+        conn, cursor = self.connect_to_db()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS screentime (
+                date DATE PRIMARY KEY NOT NULL,
+                active_time TIME NOT NULL
+            )
+        ''')
+        conn.commit()
+        conn.close()
+
+    def log_screentime(self, date, active_time):
+        if self.check_log(date):
+            return
+        self.create_screentime_table()
+        conn, cursor = self.connect_to_db()
+        cursor.execute(f'''
+            INSERT INTO screentime (date, active_time)
+                       VALUES (?, ?)
+        ''', (date, active_time))
+        conn.commit()
+        conn.close()
+
+    def check_log(self, date):
+        self.create_user_table()
+        conn, cursor = self.connect_to_db()
+        cursor.execute(f'''
+            SELECT * FROM screentime
+            WHERE date=(?);
+        ''', (date,))
+        user_exists = cursor.fetchone() is not None 
+
+        conn.commit()
+        conn.close()
+
+        return user_exists
 
 class Block(Thread):
     '''Responsible for blocking the computer when needed'''
