@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox as mb
+from app_utils import Client
 import re
+
 
 palette = {
     'background_color': '#087CA7',
@@ -8,31 +10,47 @@ palette = {
     'button_color': '#096D92'
 }
 
-class client_gui:
-    def login(self):
+class ClientApp:
+    def __init__(self):
+        self.ip = self.login_screen()
+        print(self.ip)
+        self.client = Client(self.ip, 8008)
+        self.client.start()
+
+    def login_screen(self):
+        def on_login_button_click():
+            self.ip = ip_entry.get()  # Retrieve text from entry widget
+            ip_regex = r'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'
+            if re.match(ip_regex,self.ip):
+                login.destroy()  # Close the login window
+                self.parental_control(self.ip)  # Call the parental_control method with the retrieved IP
+            else:
+                mb.showerror(title = "IP Error", message = "Check your ip adress and try again")
+            
+
         login = tk.Tk()
         login.title("Log In")
         login.geometry('700x500')
-        login.attributes('-topmost',True)
+        login.attributes('-topmost', True)
         login['background'] = palette['background_color']
 
         ip_label = tk.Label(
             login,
             text="Children IP Address",
-            font=("CoolveticaRg-Regular",20),
+            font=("CoolveticaRg-Regular", 20),
             fg=palette['text_color'],
-            bg=palette['background_color']    
+            bg=palette['background_color']
         )
         ip_entry = tk.Entry(
             login,
-            width = 30
+            width=30
         )
         login_button = tk.Button(
             login,
             text='login',
-            command=lambda: self.ip_check(login, ip_entry.get()),
+            command=on_login_button_click,
             width=15,
-            font=("CoolveticaRg-Regular",14),
+            font=("CoolveticaRg-Regular", 14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -40,26 +58,19 @@ class client_gui:
         logo = tk.Label(
             login,
             text="Supervise.",
-            font=("CoolveticaRg-Regular",25),
-            bg= palette['background_color'],
-            fg= palette['text_color']
+            font=("CoolveticaRg-Regular", 25),
+            bg=palette['background_color'],
+            fg=palette['text_color']
         )
 
         ip_label.place(relx=0.5, rely=0.35, anchor='center')
         ip_entry.place(relx=0.5, rely=0.43, anchor='center')
         login_button.place(relx=0.5, rely=0.55, anchor='center')
-        logo.place(relx = 0.5, rely = 0.9, anchor = 'center')
+        logo.place(relx=0.5, rely=0.9, anchor='center')
 
         login.mainloop()
 
-    def ip_check(self, login, ip):
-        login.destroy()
-        ip_regex = r'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'
-        if re.match(ip_regex,ip):
-            self.parental_control(ip)
-        else:
-            mb.showerror(title = "IP Error", message = "Check your ip adress and try again")
-            self.login()
+        return ip_entry.get()  # Return the retrieved IP after the login window is closed
             
     def parental_control(self, ip):
         parental = tk.Tk()
@@ -77,7 +88,7 @@ class client_gui:
         screenshot_button = tk.Button(
             parental,
             text='Take Screenshot',
-            command=self.take_screenshot,
+            command=lambda: self.client.request_data(3),
             width=30,
             font=("CoolveticaRg-Regular",14),
             bg=palette['button_color'],
@@ -163,6 +174,6 @@ class client_gui:
         pass
 
 if __name__== '__main__':
-    app = client_gui().login()
+    app = ClientApp()
 
 

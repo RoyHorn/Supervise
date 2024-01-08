@@ -4,7 +4,6 @@ from datetime import datetime
 from PIL import ImageGrab
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
-from icecream import ic
 
 #color paletee
 palette = {

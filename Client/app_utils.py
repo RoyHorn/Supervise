@@ -1,4 +1,4 @@
-import socket
+import socket, threading
 from PIL import Image
 
 
@@ -7,6 +7,28 @@ class Client():
         self.host = host  # The server's hostname or IP address
         self.port = port  # The port used by the server
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.messages = [] # each place (command, data)
+        self.messages_lock = threading.Lock()
+
+    def send_receive_messages(self):
+        for cmmd, data in self.messages:
+            self.client_socket.send(f'{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
+            self.receive_messages()
+        
+    def receive_messages(self):
+        type = self.client_socket.recv(1).decode()
+        cmmd = self.client_socket.recv(1).decode()
+        length = int(self.client_socket.recv(8).decode())
+        data = self.client_socket.recv(length)
+
+        if type == 'r':
+            self.handle_response(cmmd, data)
+        elif type == 'u':
+            self.update(cmmd)
+        
+    def request_data(self, cmmd, data=''):
+        with self.messages_lock:
+            self.messages.append((cmmd, data))
 
     def show_screenshot(self, data):
         '''this function translates the photo from byte back to png and shows it'''
@@ -35,22 +57,9 @@ class Client():
         self.client_socket.connect((self.host, self.port))
 
         while True:
-            message = input("Enter message to send (or 'quit' to exit): ")
-            if message == 'quit':
-                self.client_socket.send(b'100000004quit')
-                self.client_socket.close()
-                break
+            self.send_receive_messages()
 
-            self.client_socket.send(f'{message}{str(len(message)).zfill(8)}{message}'.encode())
-            type = self.client_socket.recv(1).decode()
-            cmmd = self.client_socket.recv(1).decode()
-            length = int(self.client_socket.recv(8).decode())
-            data = self.client_socket.recv(length)
+    def start(self):
+        client_thread = threading.Thread(target= self.run)
+        client_thread.run()
 
-            if type == 'r':
-                self.handle_response(cmmd, data)
-            elif type == 'u':
-                self.update(cmmd)
-
-a = Client('localhost', 5555)
-a.run()

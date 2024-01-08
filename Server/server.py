@@ -79,5 +79,5 @@ class Server():
 
             self.send_messages()                       
 
-a = Server('0.0.0.0',5555)
+a = Server('0.0.0.0',8008)
 a.serve()
