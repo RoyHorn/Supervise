@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox as mb
 from app_utils import Client
-import threading
 from icecream import ic
 import re
 
@@ -33,7 +32,6 @@ class ClientApp:
         login.title("Log In")
         login.geometry('700x500')
         login.attributes('-topmost', True)
-        # login.protocol("WM_DELETE_WINDOW", lambda: self.client.close_client())
         login['background'] = palette['background_color']
 
         ip_label = tk.Label(
@@ -73,10 +71,15 @@ class ClientApp:
         login.mainloop()
             
     def parental_control(self, ip):
+        def on_window_close(): #TODO make it work
+            parental.destroy()
+            self.client.close_client()
+
         parental = tk.Tk()
         parental.geometry('700x500')
         parental.title("Parental Control")
         parental['background'] = palette['background_color']
+        parental.protocol("WM_DELETE_WINDOW", lambda: on_window_close())
 
         connected_to_label = tk.Label(
             parental,
