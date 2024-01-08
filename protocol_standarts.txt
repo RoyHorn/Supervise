@@ -1,0 +1,10 @@
+1. time is represented using datetime library
+
+# Message PROTOCOL GUARDIN -> CHILDREN
+FUNC_LIST: 
+    1. block
+    2. 
+{func_len}{func}
+
+# Message PROTOCOL CHILDREN -> GUARDIN
+{func_len}{func}
