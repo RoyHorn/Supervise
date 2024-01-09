@@ -9,6 +9,7 @@ class Server():
         self.port = port
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.block = Block()
+        self.web_blocker = WebBlocker()
         self.client_sockets = [] #contains all socket
         self.messages = [] #contains messages to be sent and recievers (msg, receivers)
         self.rlist = []
@@ -22,7 +23,7 @@ class Server():
         for type, cmmd, msg, recivers in self.messages:
             for reciver in recivers:
                 if reciver in self.wlist:
-                    if cmmd == 3: # specific handeling for images
+                    if cmmd == 3 or cmmd == 4: # specific handeling for images
                         reciver.send((f'{type}{cmmd}{str(len(msg)).zfill(8)}').encode())
                         reciver.sendall(msg)
                         recivers.remove(reciver)
@@ -42,12 +43,15 @@ class Server():
         elif cmmd == '3': # take screenshot
             image = Screenshot().screenshot()
             self.messages.append(('r', 3, image, [client]))
+        elif cmmd == '4':
+            raw_data = self.web_blocker.get_data()
+            self.messages.append(('r', 4, raw_data, [client]))
         elif cmmd == '5':
             self.messages.append(('u', 5, msg, self.client_sockets.copy()))
-            WebBlocker().add_website(msg)
+            self.web_blocker.add_website(msg)
         elif cmmd == '6':
             self.messages.append(('u', 6, msg, self.client_sockets.copy()))
-            WebBlocker().remove_website(msg)
+            self.web_blocker.remove_website(msg)
         else:
             self.messages.append(('r', cmmd, msg, self.client_sockets.copy()))
 

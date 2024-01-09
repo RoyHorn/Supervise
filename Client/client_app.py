@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox as mb
 from app_utils import Client
 from icecream import ic
+import time
 import re
 
 
@@ -183,7 +184,6 @@ class ClientApp:
             web_blocker.geometry('700x500')
             web_blocker.title("Web Blocker")
             web_blocker['background'] = palette['background_color']
-            #TODO request the site list, add to list the returned values
 
             listbox = tk.Listbox(web_blocker)
             website_entry = tk.Entry(
@@ -214,11 +214,12 @@ class ClientApp:
             add_button.place(relx=0.25, rely=0.45)
             remove_button.place(relx=0.58, rely=0.65)
 
-
-
-    def switch_computer(self):
-        parental.destroy()
-        self.login()
+            self.client.request_data(4)
+            time.sleep(0.5) #allows the current sites list to be loaded
+            website_list = self.client.get_sites_list()
+            if len(website_list)>0:
+                for website in website_list:
+                    listbox.insert(tk.END, website)
 
 if __name__== '__main__':
     app = ClientApp()

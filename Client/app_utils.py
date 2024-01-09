@@ -10,6 +10,7 @@ class Client(Thread):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
+        self.sites_list = []
 
     def send_receive_messages(self):
         for cmmd, data in self.messages:
@@ -38,12 +39,27 @@ class Client(Thread):
         image.show()
 
     def handle_response(self, cmmd, data):
+        def generate_sites_list(raw_data):
+            urls = []
+            if len(raw_data)>0:
+                # Split the raw data into lines
+                lines = raw_data.strip().split('\n')
+
+                # Extract URLs from each line
+                urls = [line.split()[1] for line in lines]
+            return urls
         '''handels the server rsponses - for images opens the specific func, 
         for screentime shows the data in the specific window...'''
         if cmmd == '3': #3 - screenshot command
             self.show_screenshot(data)
+        if cmmd == '4':
+            self.sites_list = generate_sites_list(data.decode())
+            #TODO return sites_lists correctly - currently returns None
         else:
             print("Received from server:", data.decode())
+
+    def get_sites_list(self):
+        return self.sites_list
 
     def update(self, cmmd):
         '''handels changes made by other clients - 

@@ -252,6 +252,10 @@ class WebBlocker:
 
         return []
 
+    def get_data(self): #TODO
+        with open(self.path,'rb') as f:
+            return f.read()
+
 
     def update_file(self):
         '''responsible for updating the hosts file after every change'''
