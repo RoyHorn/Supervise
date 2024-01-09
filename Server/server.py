@@ -1,6 +1,6 @@
 import socket
 import select
-from server_utils import ActiveTime, Screenshot, Block
+from server_utils import ActiveTime, Screenshot, Block, WebBlocker
 
 class Server():
     '''handles the multiuser server'''
@@ -42,6 +42,12 @@ class Server():
         elif cmmd == '3': # take screenshot
             image = Screenshot().screenshot()
             self.messages.append(('r', 3, image, [client]))
+        elif cmmd == '5':
+            self.messages.append(('u', 5, msg, self.client_sockets.copy()))
+            WebBlocker().add_website(msg)
+        elif cmmd == '6':
+            self.messages.append(('u', 6, msg, self.client_sockets.copy()))
+            WebBlocker().remove_website(msg)
         else:
             self.messages.append(('r', cmmd, msg, self.client_sockets.copy()))
 

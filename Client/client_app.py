@@ -161,17 +161,67 @@ class ClientApp:
         screentime.title("Screen Time")
         screentime['background'] = palette['background_color']
 
-    def web_blocker(self, parental):
-        web_blocker = tk.Toplevel(parental)
-        web_blocker.geometry('700x500')
-        web_blocker.title("Web Blocker")
-        web_blocker['background'] = palette['background_color']
+    def web_blocker(self,parental):
+            def on_add_button_click():
+                website = website_entry.get()
+                if website:  # Ensure the entry isn't empty
+                    listbox.insert(tk.END, website)
+                    website_entry.delete(0, tk.END)  # Clear the entry after adding
+                    self.client.request_data(5, website)
 
-    def switch_computer(self, parental):
+            def on_remove_button_click():
+                try:
+                    selected_index = listbox.curselection()[0]  # Get the index of the selected item
+                    website = listbox.get(selected_index)
+                    listbox.delete(selected_index)  # Remove the selected item
+                    self.client.request_data(6, website)
+                except IndexError:  # Handle the case where no item is selected
+                    pass  # Do nothing if no item is selected
+
+
+            web_blocker = tk.Toplevel(parental)
+            web_blocker.geometry('700x500')
+            web_blocker.title("Web Blocker")
+            web_blocker['background'] = palette['background_color']
+            #TODO request the site list, add to list the returned values
+
+            listbox = tk.Listbox(web_blocker)
+            website_entry = tk.Entry(
+                web_blocker,
+                width=30
+            )
+            add_button = tk.Button(
+                web_blocker,
+                text='Add Website',
+                command=lambda: on_add_button_click(),
+                font=("CoolveticaRg-Regular",14),
+                bg=palette['button_color'],
+                fg=palette['text_color'],
+                border=0
+            )
+            remove_button = tk.Button(
+                web_blocker,
+                text='Remove Website',
+                command=lambda: on_remove_button_click(),
+                font=("CoolveticaRg-Regular",14),
+                bg=palette['button_color'],
+                fg=palette['text_color'],
+                border=0
+            )
+
+            listbox.place(relx=0.6, rely=0.3)
+            website_entry.place(relx=0.2, rely=0.4)
+            add_button.place(relx=0.25, rely=0.45)
+            remove_button.place(relx=0.58, rely=0.65)
+
+
+
+    def switch_computer(self):
         parental.destroy()
         self.login()
 
 if __name__== '__main__':
     app = ClientApp()
+ 
 
 

@@ -236,7 +236,22 @@ class WebBlocker:
     def __init__(self):
         self.path = 'C:/Windows/system32/drivers/etc/hosts'
         self.redirect = '127.0.0.1'
-        self.blocked_sites = []
+        self.blocked_sites = self.get_sites()
+
+    def get_sites(self): #TODO
+        with open(self.path,'r') as f:
+            raw_data = f.read()
+
+            if len(raw_data)>0:
+                # Split the raw data into lines
+                lines = raw_data.strip().split('\n')
+
+                # Extract URLs from each line
+                urls = [line.split()[1] for line in lines]
+                return urls
+
+        return []
+
 
     def update_file(self):
         '''responsible for updating the hosts file after every change'''
