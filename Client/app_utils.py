@@ -1,6 +1,7 @@
 import socket, threading
 from threading import Thread
 from PIL import Image
+from icecream import ic
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -56,7 +57,7 @@ class Client(Thread):
             self.sites_list = generate_sites_list(data.decode())
             #TODO return sites_lists correctly - currently returns None
         else:
-            print("Received from server:", data.decode())
+            pass
 
     def get_sites_list(self):
         return self.sites_list

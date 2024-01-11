@@ -5,7 +5,6 @@ from icecream import ic
 import time
 import re
 
-
 palette = {
     'background_color': '#087CA7',
     'text_color': '#E7ECEF',
@@ -132,7 +131,7 @@ class ClientApp:
         switch_computer_button = tk.Button(
             parental,
             text='Switch Computer',
-            command=lambda: self.switch_computer(parental),
+            command=lambda: self.client.request_data(2),
             font=("CoolveticaRg-Regular",14),
             bg=palette['button_color'],
             fg=palette['text_color'],

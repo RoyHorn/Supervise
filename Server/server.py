@@ -1,6 +1,7 @@
 import socket
 import select
 from server_utils import ActiveTime, Screenshot, Block, WebBlocker
+from icecream import ic
 
 class Server():
     '''handles the multiuser server'''
@@ -31,7 +32,7 @@ class Server():
                         reciver.send(f'{type}{cmmd}{str(len(msg)).zfill(8)}{msg}'.encode())
                         recivers.remove(reciver)
             if not recivers:
-                self.messages.remove((type, cmmd, msg,recivers))
+                self.messages.remove((type, cmmd, msg, recivers))
 
     def handle_commands(self, cmmd, msg, client):
         '''responsible for giving the right response for every command'''
@@ -40,6 +41,7 @@ class Server():
             self.block.start()
         elif cmmd == '2': # end computer block
             self.messages.append(('u', 2, 'unblocked', self.client_sockets.copy()))
+            self.block.end_block_func()
         elif cmmd == '3': # take screenshot
             image = Screenshot().screenshot()
             self.messages.append(('r', 3, image, [client]))

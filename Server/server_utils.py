@@ -1,4 +1,5 @@
 from threading import Thread
+import threading
 from win32api import GetLastInputInfo
 from datetime import datetime
 from PIL import ImageGrab
@@ -153,59 +154,69 @@ class Block(Thread):
     '''Responsible for blocking the computer when needed'''
     def __init__(self):
         super().__init__()
+        self.end_block_flag = False
+        self.block_lock = threading.Lock()
 
     def run(self):
         '''starts the block'''
+        self.end_block_flag = False
         self.disable_keyboard()
         self.setup_window()
         self.enable_keyboard() 
 
-    def end_block(self):
-        '''ends the block'''
-        self.join(1)
+    def end_block_func(self):
+        with self.block_lock:
+            self.end_block_flag = True
 
     def setup_window(self):
+        def close():
+            self.root.destroy()
+            self.enable_keyboard()
+
         '''tkinter window setup'''
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', True)
         self.root.title("block")
         self.root['background'] = palette['background_color']
 
-        #keeps the self.root on top
+        # keeps the self.root on top
         self.root.wm_attributes("-topmost", True)
         self.root.protocol("WM_DELETE_WINDOW", lambda: None)
 
         logo = tk.Label(
             self.root,
             text="Supervise.",
-            font=("CoolveticaRg-Regular",25),
-            bg= palette['background_color'],
-            fg= palette['text_color']
+            font=("CoolveticaRg-Regular", 25),
+            bg=palette['background_color'],
+            fg=palette['text_color']
         )
 
         message = tk.Label(
             self.root,
             text="Buddy, you have reached your time limit...",
-            font=("CoolveticaRg-Regular",60),
-            bg= palette['background_color'],
-            fg= palette['text_color']
+            font=("CoolveticaRg-Regular", 60),
+            bg=palette['background_color'],
+            fg=palette['text_color']
         )
 
         limit = tk.Label(
             self.root,
-            text=f"You can access your computer back tomorrow",
-            font=("CoolveticaRg-Regular",30),
-            bg= palette['background_color'],
-            fg= palette['text_color']
+            text="You can access your computer back tomorrow",
+            font=("CoolveticaRg-Regular", 30),
+            bg=palette['background_color'],
+            fg=palette['text_color']
         )
 
-        tk.Button(self.root,text = 'exit', command=self.root.destroy).place(rely=0.95,relx=0.12, anchor= 'center')
-        message.place(relx = 0.5, rely = 0.45, anchor = 'center')
-        limit.place(relx = 0.5, rely = 0.55, anchor = 'center')    
-        logo.place(relx = 0.5, rely = 0.9, anchor = 'center')
+        tk.Button(self.root, text='exit', command=close).place(rely=0.95, relx=0.12, anchor='center')
+        message.place(relx=0.5, rely=0.45, anchor='center')
+        limit.place(relx=0.5, rely=0.55, anchor='center')
+        logo.place(relx=0.5, rely=0.9, anchor='center')
 
         self.root.after(self.calculate_ms_delta(), self.root.destroy)
-        self.root.mainloop()
+
+        while not self.end_block_flag:
+            self.root.update()
+            self.root.update_idletasks()
 
     def calculate_ms_delta(self):
         '''calculates the ms delta until next day in order to automatically
@@ -255,7 +266,6 @@ class WebBlocker:
     def get_data(self): #TODO
         with open(self.path,'rb') as f:
             return f.read()
-
 
     def update_file(self):
         '''responsible for updating the hosts file after every change'''
