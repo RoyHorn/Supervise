@@ -14,12 +14,14 @@ class Client(Thread):
         self.sites_list = []
 
     def send_receive_messages(self):
+        '''responsible to first send requests to the server then receive the results and show to correct behaviour'''
         for cmmd, data in self.messages:
             self.client_socket.send(f'{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
             self.messages.remove((cmmd,data))
             self.receive_messages()
         
     def receive_messages(self):
+        '''recives the response from the server in chunks then moves to the correct place according to type(response\update)'''
         type = self.client_socket.recv(1).decode()
         cmmd = self.client_socket.recv(1).decode()
         length = int(self.client_socket.recv(8).decode())
@@ -31,6 +33,7 @@ class Client(Thread):
             self.update(cmmd)
         
     def request_data(self, cmmd, data=''):
+        '''allows to gui to add messages to be sent, uses the threading lock in order to stop the thread to be able to insert to the messages list'''
         with self.messages_lock:
             self.messages.append((cmmd, data))
 
@@ -60,6 +63,7 @@ class Client(Thread):
             pass
 
     def get_sites_list(self):
+        '''returns to the gui the formmated list of blocked sites'''
         return self.sites_list
 
     def update(self, cmmd):
@@ -82,5 +86,6 @@ class Client(Thread):
             self.send_receive_messages()
 
     def run(self):
+        '''the thread start method'''
         client_thread = threading.Thread(target= self.open)
         client_thread.run()

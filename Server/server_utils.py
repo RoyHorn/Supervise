@@ -75,10 +75,12 @@ class Database:
         self.database = 'supervise_db.sqlite'
 
     def connect_to_db(self):
+        '''creates connection to the database'''
         conn = sqlite3.connect(self.database)
         return (conn ,conn.cursor())
     
     def create_user_table(self):
+        '''creates the user table'''
         conn, cursor = self.connect_to_db()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -89,6 +91,7 @@ class Database:
         conn.close()
 
     def insert_user(self, ip):
+        '''inserts a new user to the users table'''
         if self.check_user(ip):
             return
         self.create_user_table()
@@ -100,6 +103,7 @@ class Database:
         conn.close()
 
     def check_user(self, ip):
+        '''checks if a certain user is in the users table'''
         self.create_user_table()
         conn, cursor = self.connect_to_db()
         cursor.execute(f'''
@@ -114,6 +118,7 @@ class Database:
         return user_exists
 
     def create_screentime_table(self):
+        '''creates screentime table if not exists'''
         conn, cursor = self.connect_to_db()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS screentime (
@@ -125,6 +130,7 @@ class Database:
         conn.close()
 
     def log_screentime(self, date, active_time):
+        '''logs the current screentime into the screentime table'''
         if self.check_log(date):
             return
         self.create_screentime_table()
@@ -137,6 +143,7 @@ class Database:
         conn.close()
 
     def check_log(self, date):
+        '''checks if there was a log in the last day'''
         self.create_user_table()
         conn, cursor = self.connect_to_db()
         cursor.execute(f'''
@@ -165,6 +172,8 @@ class Block(Thread):
         self.enable_keyboard() 
 
     def end_block_func(self):
+        '''responsible for ending the block when requested by the client'''
+        #TODO add thread killer in order to be able to re run the thread later
         with self.block_lock:
             self.end_block_flag = True
 
@@ -173,7 +182,7 @@ class Block(Thread):
             self.root.destroy()
             self.enable_keyboard()
 
-        '''tkinter window setup'''
+        '''tkinter block window setup'''
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', True)
         self.root.title("block")
@@ -249,7 +258,8 @@ class WebBlocker:
         self.redirect = '127.0.0.1'
         self.blocked_sites = self.get_sites()
 
-    def get_sites(self): #TODO
+    def get_sites(self):
+        '''gets the sites list from the hosts os file'''
         with open(self.path,'r') as f:
             raw_data = f.read()
 
@@ -263,7 +273,8 @@ class WebBlocker:
 
         return []
 
-    def get_data(self): #TODO
+    def get_data(self):
+        '''returns the raw data of the hosts file in order to send to the client'''
         with open(self.path,'rb') as f:
             return f.read()
 

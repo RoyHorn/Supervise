@@ -59,6 +59,7 @@ class Server():
 
     def serve(self):
         '''starts the server, responsible for handling current users and adding new ones'''
+        #TODO add daily check for screentime, blocks and more...
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
 

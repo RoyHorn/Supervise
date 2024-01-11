@@ -6,10 +6,11 @@ import time
 import re
 
 palette = {
-    'background_color': '#087CA7',
+    'background_color': '#1A1A1A',
     'text_color': '#E7ECEF',
     'button_color': '#096D92'
 }
+
 
 class ClientApp:
     def __init__(self):
@@ -20,6 +21,7 @@ class ClientApp:
         self.parental_control(self.ip) # Call the parental_control method with the retrieved IP
 
     def login_screen(self):
+        ''''login screen for the client app, takes the ip from the entry and creates connection'''
         def on_login_button_click():
             self.ip = ip_entry.get()  # Retrieve text from entry widget
             ip_regex = r'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'
@@ -37,7 +39,6 @@ class ClientApp:
         ip_label = tk.Label(
             login,
             text="Children IP Address",
-            font=("CoolveticaRg-Regular", 20),
             fg=palette['text_color'],
             bg=palette['background_color']
         )
@@ -50,7 +51,7 @@ class ClientApp:
             text='login',
             command=on_login_button_click,
             width=15,
-            font=("CoolveticaRg-Regular", 14),
+            font=("Calibri", 14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -71,6 +72,7 @@ class ClientApp:
         login.mainloop()
             
     def parental_control(self, ip):
+        '''opens after connecting to the server and holds all of the main functions of the app'''
         def on_window_close(): #TODO make it work
             parental.destroy()
             self.client.close_client()
@@ -84,7 +86,7 @@ class ClientApp:
         connected_to_label = tk.Label(
             parental,
             text = f'Currently connected to {ip}',
-            font=("CoolveticaRg-Regular",14),
+            font=("Calibri",14),
             bg=palette['background_color'],
             fg=palette['text_color']
         )
@@ -93,7 +95,7 @@ class ClientApp:
             text='Take Screenshot',
             command=lambda: self.client.request_data(3),
             width=30,
-            font=("CoolveticaRg-Regular",14),
+            font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -103,7 +105,7 @@ class ClientApp:
             text='Block Computer',
             command= lambda: self.client.request_data(1),
             width=30,
-            font=("CoolveticaRg-Regular",14),
+            font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -113,7 +115,7 @@ class ClientApp:
             text='Web Blocker',
             command=lambda: self.web_blocker(parental),
             width=30,
-            font=("CoolveticaRg-Regular",14),
+            font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -123,7 +125,7 @@ class ClientApp:
             text='Screentime',
             command=lambda: self.screentime(parental),
             width=30,
-            font=("CoolveticaRg-Regular",14),
+            font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -132,7 +134,7 @@ class ClientApp:
             parental,
             text='Switch Computer',
             command=lambda: self.client.request_data(2),
-            font=("CoolveticaRg-Regular",14),
+            font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
@@ -156,12 +158,15 @@ class ClientApp:
         parental.mainloop()
 
     def screentime(self, parental):
+        '''recives data from the server about screen time from the server and shows it nicely'''
         screentime = tk.Toplevel(parental)
         screentime.geometry('700x500')
         screentime.title("Screen Time")
         screentime['background'] = palette['background_color']
 
     def web_blocker(self,parental):
+            '''takes information about the blocked sites from the hosts file on server, formats it and shows it nicely -
+            allows to add/remove sites from the list'''
             def on_add_button_click():
                 website = website_entry.get()
                 if website:  # Ensure the entry isn't empty
@@ -193,7 +198,7 @@ class ClientApp:
                 web_blocker,
                 text='Add Website',
                 command=lambda: on_add_button_click(),
-                font=("CoolveticaRg-Regular",14),
+                font=("Calibri",14),
                 bg=palette['button_color'],
                 fg=palette['text_color'],
                 border=0
@@ -202,7 +207,7 @@ class ClientApp:
                 web_blocker,
                 text='Remove Website',
                 command=lambda: on_remove_button_click(),
-                font=("CoolveticaRg-Regular",14),
+                font=("Calibri",14),
                 bg=palette['button_color'],
                 fg=palette['text_color'],
                 border=0
