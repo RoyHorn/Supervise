@@ -8,7 +8,8 @@ import sqlite3
 
 #color paletee
 palette = {
-    'background_color': '#087CA7',
+    'background_color': '#1A1A1A',
+    'blue_bg': '#087CA7',
     'text_color': '#E7ECEF',
     'button_color': '#096D92'
 }
