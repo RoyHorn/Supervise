@@ -2,6 +2,7 @@ import socket, threading
 from threading import Thread
 from PIL import Image
 from icecream import ic
+import pickle
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -12,16 +13,19 @@ class Client(Thread):
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
         self.sites_list = []
+        self.screentime_list = []
 
     def send_receive_messages(self):
         '''responsible to first send requests to the server then receive the results and show to correct behaviour'''
         for cmmd, data in self.messages:
+            #TODO add encryption
             self.client_socket.send(f'{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
             self.messages.remove((cmmd,data))
             self.receive_messages()
         
     def receive_messages(self):
-        '''recives the response from the server in chunks then moves to the correct place according to type(response\update)'''
+        '''recives the response from the server in chunks then moves to the correct place according to type(response or update)'''
+        #TODO add decryption
         type = self.client_socket.recv(1).decode()
         cmmd = self.client_socket.recv(1).decode()
         length = int(self.client_socket.recv(8).decode())
@@ -43,28 +47,23 @@ class Client(Thread):
         image.show()
 
     def handle_response(self, cmmd, data):
-        def generate_sites_list(raw_data):
-            urls = []
-            if len(raw_data)>0:
-                # Split the raw data into lines
-                lines = raw_data.strip().split('\n')
-
-                # Extract URLs from each line
-                urls = [line.split()[1] for line in lines]
-            return urls
         '''handels the server rsponses - for images opens the specific func, 
         for screentime shows the data in the specific window...'''
         if cmmd == '3': #3 - screenshot command
             self.show_screenshot(data)
-        if cmmd == '4':
-            self.sites_list = generate_sites_list(data.decode())
-            #TODO return sites_lists correctly - currently returns None
+        elif cmmd == '4':
+            self.sites_list = pickle.loads(data)
+        elif cmmd == '7':
+            self.screentime_list = pickle.loads(data)
         else:
             pass
 
     def get_sites_list(self):
         '''returns to the gui the formmated list of blocked sites'''
         return self.sites_list
+    
+    def get_screentime_list(self):
+        return self.screentime_list
 
     def update(self, cmmd):
         '''handels changes made by other clients - 
@@ -76,6 +75,7 @@ class Client(Thread):
             pass #should change blocking label
 
     def close_client(self):
+        self.client_socket.send(b'900000000')
         self.client_socket.close()
 
     def open(self):

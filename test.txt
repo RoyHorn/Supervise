@@ -1,3 +1,0 @@
-facebook.com  localhostlocalhost  youtube.com    #added using Supervise.
-localhost  youtube.com    #added using Supervise.
-127.0.0.1  youtube.com    #added using Supervise.

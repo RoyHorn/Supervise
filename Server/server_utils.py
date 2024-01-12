@@ -1,7 +1,7 @@
 from threading import Thread
 import threading
 from win32api import GetLastInputInfo
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import ImageGrab
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
@@ -64,7 +64,7 @@ class ActiveTime(Thread):
 
     def get_active_time(self):
         '''returns the active time'''
-        return self.active_time
+        return float(self.active_time/3600)
 
     def __str__(self):
         '''prints the current active time and active state'''
@@ -123,22 +123,24 @@ class Database:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS screentime (
                 date DATE PRIMARY KEY NOT NULL,
-                active_time TIME NOT NULL
+                active_time REAL NOT NULL
             )
         ''')
         conn.commit()
         conn.close()
 
     def log_screentime(self, date, active_time):
-        '''logs the current screentime into the screentime table'''
-        if self.check_log(date):
-            return
         self.create_screentime_table()
+        
         conn, cursor = self.connect_to_db()
-        cursor.execute(f'''
-            INSERT INTO screentime (date, active_time)
-                       VALUES (?, ?)
+
+        # Use INSERT OR REPLACE with explicit conflict resolution
+        cursor.execute('''
+            INSERT OR REPLACE INTO screentime (date, active_time)
+            VALUES (?, ?)
+            ON CONFLICT(date) DO UPDATE SET active_time=excluded.active_time
         ''', (date, active_time))
+
         conn.commit()
         conn.close()
 
@@ -156,6 +158,26 @@ class Database:
         conn.close()
 
         return user_exists
+    
+    def get_last_week_data(self):
+        self.create_screentime_table()
+        seven_days_ago = datetime.now()-timedelta(days=7)
+        seven_days_ago.strftime("%Y-%m-%d")
+        result = ''
+
+        try:
+            self.create_screentime_table()
+            conn, cursor = self.connect_to_db()
+            cursor.execute('''
+                SELECT * FROM screentime WHERE date > ?
+            ''', (seven_days_ago,))
+            result = cursor.fetchall()
+
+            conn.close()
+        except:
+            pass
+
+        return result
 
 class Block(Thread):
     '''Responsible for blocking the computer when needed'''
@@ -272,11 +294,6 @@ class WebBlocker:
                 return urls
 
         return []
-
-    def get_data(self):
-        '''returns the raw data of the hosts file in order to send to the client'''
-        with open(self.path,'rb') as f:
-            return f.read()
 
     def update_file(self):
         '''responsible for updating the hosts file after every change'''
