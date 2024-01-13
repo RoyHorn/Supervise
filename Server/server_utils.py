@@ -226,6 +226,55 @@ class Database:
         finally:
             conn.close()
 
+    def create_time_limit_table(self):
+        '''creates the time limit table'''
+        conn, cursor = self.connect_to_db()
+
+        # Create the timelimit table if it doesn't exist
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS timelimit (
+                lim REAL NOT NULL
+            )
+        ''')
+
+        # Commit changes and close the connection
+        conn.commit()
+        conn.close()
+
+    def get_time_limit(self):
+        conn, cursor = self.connect_to_db()
+
+        # Assuming that the table has already been created using create_time_limit_table method
+        cursor.execute('SELECT lim FROM timelimit')
+        result = cursor.fetchone()
+
+        if result:
+            time_limit = result[0]
+        else:
+            time_limit = 24
+
+        conn.close()
+        return time_limit
+
+    def change_time_limit(self, new_limit):
+        '''changes the time limit in the timelimit table'''
+        conn, cursor = self.connect_to_db()
+
+        # Check if the table is empty
+        cursor.execute('SELECT COUNT(*) FROM timelimit')
+        count = cursor.fetchone()[0]
+
+        if count == 0:
+            # If the table is empty, insert a new row with the new limit value
+            cursor.execute('INSERT INTO timelimit (lim) VALUES (?)', (new_limit,))
+        else:
+            # Update the existing row with the new limit value
+            cursor.execute('UPDATE timelimit SET lim = ? WHERE rowid = 1', (new_limit,))
+
+        # Commit changes and close the connection
+        conn.commit()
+        conn.close()
+
 class Block(Thread):
     '''Responsible for blocking the computer when needed'''
     def __init__(self):
@@ -318,6 +367,9 @@ class Block(Thread):
         '''enables keyboard'''
         for i in range(150):
             keyboard.unblock_key(i)
+
+    def get_block_state(self):
+        return self.block_state
 
 class TwoFactorAuthentication():
     def __init__():

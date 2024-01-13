@@ -18,6 +18,9 @@ class Server():
         self.database = Database()
         self.active_time = ActiveTime()
         self.active_time.start()
+        self.database.create_time_limit_table()
+        self.time_limit = self.database.get_time_limit()
+        print(self.time_limit)
         self.client_sockets = [] #contains all socket
         self.messages = [] #contains messages to be sent and recievers (msg, receivers)
         self.rlist = []
@@ -38,7 +41,7 @@ class Server():
                         recivers.remove(reciver)
                     else:
                         #TODO add encryption
-                        reciver.send(f'{type}{cmmd}{str(len(msg)).zfill(8)}{msg}'.encode())
+                        reciver.send(f'{type}{cmmd}{str(len(str(msg))).zfill(8)}{msg}'.encode())
                         recivers.remove(reciver)
             if not recivers:
                 self.messages.remove((type, cmmd, msg, recivers))
@@ -72,8 +75,12 @@ class Server():
             self.messages.append(('r', 7, screentime_data, [client]))
         elif cmmd == '8': # update screentime limit
             #TODO think how to save the screentime limit
-            self.messages.append(('r', 8, '15', [client]))
+            self.messages.append(('r', 8, self.time_limit, [client]))
         elif cmmd == '9': # quit command
+            self.database.change_time_limit(msg)
+            self.time_limit = msg
+            self.messages.append(('r', 9, self.time_limit, [client]))
+        elif cmmd == '0':
             client.close()
             self.client_sockets.remove(client)
         else:
@@ -90,6 +97,9 @@ class Server():
                 # means a day has passed and the server has reopened
                 self.active_time.reset_active_time()
                 self.messages.append(('u', 2, 'unblocked', self.client_sockets.copy()))
+            if self.active_time.get_active_time() >= float(self.time_limit):
+                self.messages.append(('u', 1, 'blocked', self.client_sockets.copy()))
+                self.block.start()
             time.sleep(60)
 
     def serve(self):
@@ -109,7 +119,10 @@ class Server():
                     (connection, addr) = self.server_socket.accept()
                     self.client_sockets.append(connection)
                     print(f'new user connected {addr}')
-                    self.messages.append(('r', 0, 'Start', [client])) #TODO make sure client updates button state on startup according to block state
+                    if self.block.get_block_state():
+                        self.messages.append(('u', 1, 'blocked', [client]))
+                    else:
+                        self.messages.append(('u', 2, 'unblocked', [client]))
                 elif client in self.client_sockets:
                     #receive messages from connected clients
                     #TODO add decryption

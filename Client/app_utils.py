@@ -4,7 +4,6 @@ from PIL import Image
 from icecream import ic
 import pickle
 import select
-import tkinter as tk
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -53,8 +52,6 @@ class Client(Thread):
     def handle_response(self, cmmd, data):
         '''handels the server rsponses - for images opens the specific func, 
         for screentime shows the data in the specific window...'''
-        if cmmd == '0':
-            self.set_block_button_text(data.decode())
         if cmmd == '3': #3 - screenshot command
             self.show_screenshot(data)
         elif cmmd == '4':
@@ -102,7 +99,7 @@ class Client(Thread):
         self.block_button.config(text = data)
 
     def close_client(self):
-        self.client_socket.send(b'900000000')
+        self.client_socket.send(b'000000000')
         self.client_socket.close()
 
     def open(self):

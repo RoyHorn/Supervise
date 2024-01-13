@@ -121,7 +121,7 @@ class ClientApp:
             border=0
         )
         self.client.set_block_button(block_button)
-        
+
         web_blocker_button = tk.Button(
             parental,
             text='Web Blocker',
@@ -177,7 +177,9 @@ class ClientApp:
             else:
                 daily_limit_entry['state'] = 'disabled'
                 daily_limit_button['text'] = 'Change'
-                self.client.request_data(8, daily_limit_var.get())
+                daily_limit_entry.insert(0, daily_limit_entry.get())
+                self.client.request_data(9, daily_limit_entry.get())
+                limit_line.set_ydata([float(daily_limit_entry.get())])  # Update the y-data of the limit line
                 canvas.draw()
 
         '''recives data from the server about screen time from the server and shows it nicely'''
@@ -192,9 +194,7 @@ class ClientApp:
         time.sleep(0.5)
 
         screentime_data = self.client.get_screentime_list()
-
-        daily_limit_var = tk.StringVar()
-        daily_limit_var.set(self.client.get_screentime_limit())
+        time_limit = self.client.get_screentime_limit()
 
         # Create a DataFrame from the data
         df = pd.DataFrame(screentime_data, columns=['Date', 'Time'])
@@ -216,15 +216,16 @@ class ClientApp:
         # Add weekly average line
         weekly_avg = df['Time'].mean()
         avg_line = ax.axhline(y=weekly_avg, color='red', linestyle='--', label=f'Weekly Avg: {weekly_avg:.2f} hours')
-        # limit_line = ax.axhline(y=daily_limit_var.get(), color='green', linestyle='-', label=f'Daily Limit: {daily_limit_var.get():.2f} hours')
+        limit_line = ax.axhline(y=float(time_limit), color='green', linestyle='-', label=f'Daily Limit: {float(time_limit):.2f} hours')
 
         # Add a title label
         title_label = tk.Label(screentime, text='Screen Time', font=('Helvetica', 16, 'bold'), fg='white', bg='#087CA7')
 
         daily_limit_label = tk.Label(screentime, text = 'Daily Limit', fg='white', bg='#087CA7')
-        daily_limit_entry = tk.Entry(screentime, width=10, state='disabled', textvariable=daily_limit_var)
+        daily_limit_entry = tk.Entry(screentime, width=10)
+        daily_limit_entry.insert(0, time_limit)
+        daily_limit_entry.config(state='disabled')
         daily_limit_button = tk.Button(screentime, text  = 'Change', command = on_button_click)
-
 
         # Embed the Matplotlib figure in the Tkinter window
         canvas = FigureCanvasTkAgg(fig, master=screentime)
@@ -235,6 +236,8 @@ class ClientApp:
         daily_limit_entry.pack()
         daily_limit_button.pack()
         canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        screentime.mainloop()
     
     def web_blocker(self,parental):
         '''takes information about the blocked sites from the hosts file on server, formats it and shows it nicely -
