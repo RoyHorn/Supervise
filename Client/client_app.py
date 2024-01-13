@@ -81,6 +81,12 @@ class ClientApp:
             parental.destroy()
             self.client.close_client()
 
+        def on_block_button_click():
+            if block_button['text'] == "Start Block":
+                self.client.request_data(1)
+            else:
+                self.client.request_data(2)
+            
         parental = tk.Tk()
         parental.geometry('700x500')
         parental.title("Parental Control")
@@ -106,14 +112,16 @@ class ClientApp:
         )
         block_button = tk.Button(
             parental,
-            text='Block Computer',
-            command= lambda: self.client.request_data(1),
+            text='Start Block',
+            command= lambda: on_block_button_click(),
             width=30,
             font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
             border=0
         )
+        self.client.set_block_button(block_button)
+        
         web_blocker_button = tk.Button(
             parental,
             text='Web Blocker',

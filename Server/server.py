@@ -51,6 +51,7 @@ class Server():
         elif cmmd == '2': # end computer block
             self.messages.append(('u', 2, 'unblocked', self.client_sockets.copy()))
             self.block.end_block_func()
+            self.block = Block()
         elif cmmd == '3': # take screenshot
             image = Screenshot().screenshot()
             self.messages.append(('r', 3, image, [client]))
@@ -86,7 +87,9 @@ class Server():
                 time_active = self.active_time.get_active_time()
                 self.database.log_screentime(today_date, time_active)
             if not self.database.is_last_log_today():
+                # means a day has passed and the server has reopened
                 self.active_time.reset_active_time()
+                self.messages.append(('u', 2, 'unblocked', self.client_sockets.copy()))
             time.sleep(60)
 
     def serve(self):
@@ -106,6 +109,7 @@ class Server():
                     (connection, addr) = self.server_socket.accept()
                     self.client_sockets.append(connection)
                     print(f'new user connected {addr}')
+                    self.messages.append(('r', 0, 'Start', [client])) #TODO make sure client updates button state on startup according to block state
                 elif client in self.client_sockets:
                     #receive messages from connected clients
                     #TODO add decryption

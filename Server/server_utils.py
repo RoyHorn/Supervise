@@ -61,7 +61,7 @@ class ActiveTime(Thread):
 
     def reset_active_time(self):
         '''log last day and resets the active timer, will run every day change (every day at 00:00)'''
-        Database().log_screentime(datetime.now().strftime("%Y-%m-%d"),self.get_active_time())
+        Database().log_screentime((datetime.now()-timedelta(days=1)).strftime("%Y-%m-%d"),self.get_active_time())
         self.total_time_active = 0
 
     def get_active_time(self):
@@ -230,12 +230,14 @@ class Block(Thread):
     '''Responsible for blocking the computer when needed'''
     def __init__(self):
         super().__init__()
+        self.block_state = False
         self.end_block_flag = False
         self.block_lock = threading.Lock()
 
     def run(self):
         '''starts the block'''
         self.end_block_flag = False
+        self.block_state = True
         self.disable_keyboard()
         self.setup_window()
         self.enable_keyboard() 
@@ -245,6 +247,7 @@ class Block(Thread):
         #TODO add thread killer in order to be able to re run the thread later
         with self.block_lock:
             self.end_block_flag = True
+            self.block_state = False
 
     def setup_window(self):
         def close():

@@ -4,6 +4,7 @@ from PIL import Image
 from icecream import ic
 import pickle
 import select
+import tkinter as tk
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -11,18 +12,22 @@ class Client(Thread):
         self.host = host  # The server's hostname or IP address
         self.port = port  # The port used by the server
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.rlist = []
+        self.wlist = []
+        self.xlist = []
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
         self.sites_list = []
         self.screentime_list = []
         self.screentime_limit = ''
+        self.block_button = ''
 
     def send_receive_messages(self):
         '''responsible to first send requests to the server then receive the results and show to correct behaviour'''
 
         #responsible for update messages
-        rlist, wlist, xlist = select.select([self.client_socket], [self.client_socket], [])
-        if self.client_socket in rlist:
+        self.rlist, self.wlist, self.xlist = select.select([self.client_socket], [self.client_socket], [])
+        if self.client_socket in self.rlist:
             self.receive_messages()
 
         #responsible for responses
@@ -48,6 +53,8 @@ class Client(Thread):
     def handle_response(self, cmmd, data):
         '''handels the server rsponses - for images opens the specific func, 
         for screentime shows the data in the specific window...'''
+        if cmmd == '0':
+            self.set_block_button_text(data.decode())
         if cmmd == '3': #3 - screenshot command
             self.show_screenshot(data)
         elif cmmd == '4':
@@ -64,9 +71,9 @@ class Client(Thread):
         for example: another user started a block, this func will make sure that 
         this client updates to show that there is a block currently running'''
         if cmmd == '1': #1 - block command
-            pass #should change blocking label
+            self.set_block_button_text('End Block')
         if cmmd == '2': #2 - unblock command
-            pass #should change blocking label
+            self.set_block_button_text('Start Block')
 
     def request_data(self, cmmd, data=''):
         '''allows to gui to add messages to be sent, uses the threading lock in order to stop the thread to be able to insert to the messages list'''
@@ -87,6 +94,12 @@ class Client(Thread):
     
     def get_screentime_limit(self):
         return self.screentime_limit
+    
+    def set_block_button(self, block_button):
+        self.block_button = block_button
+
+    def set_block_button_text(self, data):
+        self.block_button.config(text = data)
 
     def close_client(self):
         self.client_socket.send(b'900000000')
