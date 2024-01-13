@@ -20,7 +20,6 @@ class Server():
         self.active_time.start()
         self.database.create_time_limit_table()
         self.time_limit = self.database.get_time_limit()
-        print(self.time_limit)
         self.client_sockets = [] #contains all socket
         self.messages = [] #contains messages to be sent and recievers (msg, receivers)
         self.rlist = []
