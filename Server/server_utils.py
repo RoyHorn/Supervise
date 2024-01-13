@@ -19,7 +19,7 @@ class ActiveTime(Thread):
     '''Responsible for counting active time on the computer'''
     def __init__(self):
         super().__init__()
-        self.active_time = 0
+        self.total_time_active = Database().get_today_active_time()*3600
         self.is_active = False
         self.state_change_delay = 1
 
@@ -46,7 +46,7 @@ class ActiveTime(Thread):
         while True:
             if self.is_active:
                 time.sleep(1)
-                self.active_time += 1
+                self.total_time_active += 1
 
     def run(self):
         '''runs two threads - one for changing the flag according to activity, the other for active time counting'''
@@ -60,16 +60,17 @@ class ActiveTime(Thread):
         count_time_thread.join()
 
     def reset_active_time(self):
-        '''resets the active timer, will run every day change (every day at 00:00)'''
-        self.active_time = 0
+        '''log last day and resets the active timer, will run every day change (every day at 00:00)'''
+        Database().log_screentime(datetime.now().strftime("%Y-%m-%d"),self.get_active_time())
+        self.total_time_active = 0
 
     def get_active_time(self):
         '''returns the active time'''
-        return float(self.active_time/3600)
-
+        return float(self.total_time_active/3600)
+    
     def __str__(self):
         '''prints the current active time and active state'''
-        return f'active time: {self.active_time} - is active: {self.is_active}'
+        return f'active time: {self.total_time_active} - is active: {self.is_active}'
 
 class Database:
     def __init__(self):
@@ -179,6 +180,51 @@ class Database:
             pass
 
         return result
+    
+    def get_today_active_time(self):
+            '''returns the total active time for today'''
+            self.create_screentime_table()
+            conn, cursor = self.connect_to_db()
+
+            try:
+                today_date = datetime.now().strftime("%Y-%m-%d")
+                cursor.execute('''
+                    SELECT active_time FROM screentime WHERE date = ?
+                ''', (today_date,))
+                result = cursor.fetchone()
+
+                if result:
+                    return result[0]  # Returning the active time for today
+                else:
+                    return 0  # If no entry for today, return 0 as default
+            except sqlite3.Error as e:
+                return 0
+            finally:
+                conn.close()
+    
+    def is_last_log_today(self):
+        '''returns True if the last log entry is today, False otherwise'''
+        self.create_screentime_table()
+        conn, cursor = self.connect_to_db()
+
+        try:
+            cursor.execute('''
+                SELECT MAX(date) FROM screentime
+            ''')
+            last_log_date = cursor.fetchone()[0]
+            
+            if last_log_date is not None:
+                last_log_date = datetime.strptime(last_log_date, "%Y-%m-%d").date()
+                
+                # Check if the last log date is today
+                return last_log_date == datetime.now().date()
+                
+            else:
+                return False
+        except sqlite3.Error as e:
+            return False
+        finally:
+            conn.close()
 
 class Block(Thread):
     '''Responsible for blocking the computer when needed'''
@@ -306,7 +352,6 @@ class WebBlocker:
     def add_website(self, domain):
         '''responsible for adding pages to the block list'''
         self.blocked_sites.append(domain)
-        print(self.blocked_sites)
         self.update_file()
 
     def remove_website(self, domain):

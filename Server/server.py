@@ -4,6 +4,8 @@ import datetime
 from server_utils import ActiveTime, Screenshot, Block, WebBlocker, Database
 from icecream import ic
 import pickle
+import threading
+import time
 
 class Server():
     '''handles the multiuser server'''
@@ -56,10 +58,10 @@ class Server():
             web_list = pickle.dumps(self.web_blocker.get_sites())
             self.messages.append(('r', 4, web_list, [client]))
         elif cmmd == '5': # add website to blocker
-            self.messages.append(('u', 5, msg, self.client_sockets.copy()))
+            self.messages.append(('r', 5, msg, [client]))
             self.web_blocker.add_website(msg)
         elif cmmd == '6': # remove website from blocker
-            self.messages.append(('u', 6, msg, self.client_sockets.copy()))
+            self.messages.append(('r', 6, msg, [client]))
             self.web_blocker.remove_website(msg)
         elif cmmd == '7': # request screentime data
             today_date = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -69,31 +71,33 @@ class Server():
             self.messages.append(('r', 7, screentime_data, [client]))
         elif cmmd == '8': # update screentime limit
             #TODO think how to save the screentime limit
-            self.messages.append(('r', 8, 'updated', [client]))
+            self.messages.append(('r', 8, '15', [client]))
         elif cmmd == '9': # quit command
             client.close()
             self.client_sockets.remove(client)
         else:
             self.messages.append(('r', cmmd, msg, self.client_sockets.copy()))
 
+    def update_handler(self):
+        while True:
+            time_now = datetime.datetime.now().time()
+            if time_now.minute % 15 == 0:
+                today_date = datetime.datetime.now().strftime("%Y-%m-%d")
+                time_active = self.active_time.get_active_time()
+                self.database.log_screentime(today_date, time_active)
+            if not self.database.is_last_log_today():
+                self.active_time.reset_active_time()
+            time.sleep(60)
+
     def serve(self):
         '''starts the server, responsible for handling current users and adding new ones'''
         #TODO add daily check for screentime, blocks and more...
+        threading.Thread(target=self.update_handler).start()
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
 
         while True:
             self.rlist, self.wlist, self.xlist = select.select([self.server_socket] + self.client_sockets, self.client_sockets, [])
-            
-            time_now = datetime.datetime.now().time()
-            if time_now.endswith(':00') or time_now.endswith(':30'):
-                today_date = datetime.datetime.now().strftime("%Y-%m-%d")
-                time_active = self.active_time.get_active_time()
-                self.database.log_screentime(today_date, time_active)
-            else:
-                #TODO add a rule checking if the screentime should be reset (day change)
-                pass
-
 
             for client in self.rlist:
                 if client is self.server_socket:

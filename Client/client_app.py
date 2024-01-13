@@ -3,7 +3,6 @@ from tkinter import messagebox as mb
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from app_utils import Client
-from icecream import ic
 import pandas as pd
 import time
 import re
@@ -180,8 +179,14 @@ class ClientApp:
         screentime['background'] = palette['blue_bg']
 
         self.client.request_data(7)
+        self.client.request_data(8)
+
         time.sleep(0.5)
+
         screentime_data = self.client.get_screentime_list()
+
+        daily_limit_var = tk.StringVar()
+        daily_limit_var.set(self.client.get_screentime_limit())
 
         # Create a DataFrame from the data
         df = pd.DataFrame(screentime_data, columns=['Date', 'Time'])
@@ -208,7 +213,6 @@ class ClientApp:
         # Add a title label
         title_label = tk.Label(screentime, text='Screen Time', font=('Helvetica', 16, 'bold'), fg='white', bg='#087CA7')
 
-        daily_limit_var = tk.StringVar()
         daily_limit_label = tk.Label(screentime, text = 'Daily Limit', fg='white', bg='#087CA7')
         daily_limit_entry = tk.Entry(screentime, width=10, state='disabled', textvariable=daily_limit_var)
         daily_limit_button = tk.Button(screentime, text  = 'Change', command = on_button_click)

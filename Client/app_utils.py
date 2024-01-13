@@ -3,6 +3,7 @@ from threading import Thread
 from PIL import Image
 from icecream import ic
 import pickle
+import select
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -14,9 +15,17 @@ class Client(Thread):
         self.messages_lock = threading.Lock()
         self.sites_list = []
         self.screentime_list = []
+        self.screentime_limit = ''
 
     def send_receive_messages(self):
         '''responsible to first send requests to the server then receive the results and show to correct behaviour'''
+
+        #responsible for update messages
+        rlist, wlist, xlist = select.select([self.client_socket], [self.client_socket], [])
+        if self.client_socket in rlist:
+            self.receive_messages()
+
+        #responsible for responses
         for cmmd, data in self.messages:
             #TODO add encryption
             self.client_socket.send(f'{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
@@ -35,16 +44,6 @@ class Client(Thread):
             self.handle_response(cmmd, data)
         elif type == 'u':
             self.update(cmmd)
-        
-    def request_data(self, cmmd, data=''):
-        '''allows to gui to add messages to be sent, uses the threading lock in order to stop the thread to be able to insert to the messages list'''
-        with self.messages_lock:
-            self.messages.append((cmmd, data))
-
-    def show_screenshot(self, data):
-        '''this function translates the photo from byte back to png and shows it'''
-        image = Image.frombytes("RGB", (1920, 1080), data)
-        image.show()
 
     def handle_response(self, cmmd, data):
         '''handels the server rsponses - for images opens the specific func, 
@@ -55,15 +54,10 @@ class Client(Thread):
             self.sites_list = pickle.loads(data)
         elif cmmd == '7':
             self.screentime_list = pickle.loads(data)
+        elif cmmd == '8':
+            self.screentime_limit = data.decode()
         else:
             pass
-
-    def get_sites_list(self):
-        '''returns to the gui the formmated list of blocked sites'''
-        return self.sites_list
-    
-    def get_screentime_list(self):
-        return self.screentime_list
 
     def update(self, cmmd):
         '''handels changes made by other clients - 
@@ -73,6 +67,26 @@ class Client(Thread):
             pass #should change blocking label
         if cmmd == '2': #2 - unblock command
             pass #should change blocking label
+
+    def request_data(self, cmmd, data=''):
+        '''allows to gui to add messages to be sent, uses the threading lock in order to stop the thread to be able to insert to the messages list'''
+        with self.messages_lock:
+            self.messages.append((cmmd, data))
+
+    def show_screenshot(self, data):
+        '''this function translates the photo from byte back to png and shows it'''
+        image = Image.frombytes("RGB", (1920, 1080), data)
+        image.show()
+
+    def get_sites_list(self):
+        '''returns to the gui the formmated list of blocked sites'''
+        return self.sites_list
+    
+    def get_screentime_list(self):
+        return self.screentime_list
+    
+    def get_screentime_limit(self):
+        return self.screentime_limit
 
     def close_client(self):
         self.client_socket.send(b'900000000')
@@ -88,4 +102,4 @@ class Client(Thread):
     def run(self):
         '''the thread start method'''
         client_thread = threading.Thread(target= self.open)
-        client_thread.run()
+        client_thread.start()
