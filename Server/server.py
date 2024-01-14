@@ -2,7 +2,6 @@ import socket
 import select
 import datetime
 from server_utils import ActiveTime, Screenshot, Block, WebBlocker, Database
-from icecream import ic
 import pickle
 import threading
 import time
