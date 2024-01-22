@@ -94,7 +94,7 @@ class Client(Thread):
         self.block_button = block_button
 
     def set_block_button_text(self, data):
-        self.block_button.config(text = data)
+        self.block_button.config(text=data)
 
     def close_client(self):
         self.client_socket.send(b'000000000')
