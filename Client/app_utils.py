@@ -60,8 +60,6 @@ class Client(Thread):
             self.screentime_list = pickle.loads(data)
         elif cmmd == '8':
             self.screentime_limit = data.decode()
-        else:
-            pass
 
     def update(self, cmmd):
         '''handels changes made by other clients - 
