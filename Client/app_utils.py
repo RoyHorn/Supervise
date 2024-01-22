@@ -109,5 +109,5 @@ class Client(Thread):
 
     def run(self):
         '''the thread start method'''
-        client_thread = threading.Thread(target= self.open)
+        client_thread = threading.Thread(target=self.open)
         client_thread.start()
