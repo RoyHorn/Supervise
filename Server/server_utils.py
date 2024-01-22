@@ -61,7 +61,6 @@ class ActiveTime(Thread):
 
     def reset_active_time(self):
         '''log last day and resets the active timer, will run every day change (every day at 00:00)'''
-        Database().log_screentime((datetime.now()-timedelta(days=1)).strftime("%Y-%m-%d"),self.get_active_time())
         Database().log_screentime(datetime.now().strftime("%Y-%m-%d"),0)
         self.total_time_active = 0
 

@@ -1,10 +1,17 @@
-1. time is represented using datetime library
+# Message PROTOCOL Client -> Server (GUARDIAN -> CHILDREN)
+{func}{msg_len}{msg}
 
-# Message PROTOCOL GUARDIN -> CHILDREN
-FUNC_LIST: 
-    1. block
-    2. 
-{func_len}{func}
+# Message PROTOCOL Server -> Client (CHILDREN -> GUARDIAN)
+{type}{func}{msg_len}{msg}
 
-# Message PROTOCOL CHILDREN -> GUARDIN
-{func_len}{func}
+#FUNC_LIST
+0. Quit
+1. Block Screen
+2. Unblock Screen
+3. Take Screenshot
+4. Request blocked web list
+5. Add website to webblocker
+6. Remove website from webblocker
+7. Request last week screentime data
+8. Request screentime limit
+9. Set screentime limit
