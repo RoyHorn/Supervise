@@ -60,8 +60,6 @@ class Client(Thread):
             self.screentime_list = pickle.loads(data)
         elif cmmd == '8':
             self.screentime_limit = data.decode()
-        else:
-            pass
 
     def update(self, cmmd):
         '''handels changes made by other clients - 
@@ -96,7 +94,7 @@ class Client(Thread):
         self.block_button = block_button
 
     def set_block_button_text(self, data):
-        self.block_button.config(text = data)
+        self.block_button.config(text=data)
 
     def close_client(self):
         self.client_socket.send(b'000000000')
@@ -111,5 +109,5 @@ class Client(Thread):
 
     def run(self):
         '''the thread start method'''
-        client_thread = threading.Thread(target= self.open)
+        client_thread = threading.Thread(target=self.open)
         client_thread.start()

@@ -32,7 +32,7 @@ class Server():
         for type, cmmd, msg, recivers in self.messages:
             for reciver in recivers:
                 if reciver in self.wlist:
-                    if cmmd in [3,4,7]: # specific handeling for already data already in byte format
+                    if cmmd in (3,4,7): # specific handeling for already data already in byte format
                         #TODO add encryption
                         reciver.send((f'{type}{cmmd}{str(len(msg)).zfill(8)}').encode())
                         reciver.sendall(msg)
