@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from PIL import ImageGrab
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
+import pyotp
 
 #color paletee
 palette = {
@@ -275,6 +276,13 @@ class Database:
         conn.commit()
         conn.close()
 
+# conn, cursor = Database().connect_to_db()
+# cursor.execute('''
+#     DELETE FROM users
+# ''')
+# conn.commit()
+# conn.close()
+
 class Block(Thread):
     '''Responsible for blocking the computer when needed'''
     def __init__(self):
@@ -371,9 +379,54 @@ class Block(Thread):
     def get_block_state(self):
         return self.block_state
 
-class TwoFactorAuthentication():
-    def __init__():
-        pass
+class TwoFactorAuthentication(Thread):
+    def __init__(self):
+        super().__init__()
+        self.secret = pyotp.random_base32()
+        self.totp = pyotp.TOTP(self.secret)
+        self.show = False
+
+    def get_time_remaining(self):
+        return self.totp.interval - datetime.now().timestamp() % self.totp.interval
+
+    def generate_authenication_code(self):
+        return self.totp.now()
+
+    def verify_code(self, input_code):
+        return self.totp.verify(input_code)
+
+    def display_window(self):
+        self.show = True
+        window = tk.Tk()
+        window.title('Code Screen')
+        window.configure
+        window.wm_attributes("-topmost", True)
+        window.protocol("WM_DELETE_WINDOW", lambda: self.stop_code_display())
+        window['background'] = palette['blue_bg']
+
+        frame = tk.Frame(window, bg=palette['blue_bg'])
+        frame.pack(pady=10)
+
+        # Create a label to display the code
+        label = tk.Label(frame, text=f"Two Factor Authenication Code:", font=("Calibri", 20), fg=palette['text_color'], bg=palette['blue_bg'], padx=20)
+        code_label = tk.Label(frame, text=f"", font=("Calibri", 50), fg=palette['text_color'], bg=palette['blue_bg'], padx=20)
+        label.pack()
+        code_label.pack()
+
+        # Run the Tkinter event loop
+        while self.show:
+            code_label.config(text=self.generate_authenication_code())
+            window.update()
+            window.update_idletasks()
+
+    def display_code(self):
+        if not self.show:
+            window_thread = threading.Thread(target=self.display_window)
+            window_thread.start()
+
+    def stop_code_display(self):
+        if self.show:
+            self.show = False #stops the current instance of window
 
 class WebBlocker:
     '''responsible for blocking access to specific web pages using os hosts files'''

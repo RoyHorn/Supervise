@@ -5,13 +5,24 @@
 {type}{func}{msg_len}{msg}
 
 #FUNC_LIST
-0. Quit
-1. Block Screen
-2. Unblock Screen
-3. Take Screenshot
-4. Request blocked web list
-5. Add website to webblocker
-6. Remove website from webblocker
-7. Request last week screentime data
-8. Request screentime limit
-9. Set screentime limit
+
+Type R = Response
+r0. Quit
+r1. Block Screen
+r2. Unblock Screen
+r3. Take Screenshot
+r4. Request blocked web list
+r5. Add website to webblocker
+r6. Remove website from webblocker
+r7. Request last week screentime data
+r8. Request screentime limit
+r9. Set screentime limit
+
+Type A = New user Authorizing
+a0. Start Auth Process [Server -> Client]
+a1. Send code back to Server [Client -> Server]
+a2. Return response (T\F) [Server -> Client]
+    - If True - close code window and open app
+    - If False - restart auth process
+
+Type U = Update

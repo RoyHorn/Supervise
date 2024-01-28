@@ -30,7 +30,13 @@ class ClientApp:
                 login.destroy()
                 self.client = Client(self.ip, 8008)
                 self.client.start()
-                self.parental_control()
+
+                time.sleep(0.5)
+
+                if self.client.auth_needed:
+                    self.create_2fa_window()
+                else:
+                    self.parental_control()
             else:
                 mb.showerror(title="IP Error", message="Check your ip address and try again")
 
@@ -168,6 +174,44 @@ class ClientApp:
         logo.place(relx = 0.5, rely = 0.9, anchor = 'center')
         
         parental.mainloop()
+
+    def create_2fa_window(self):
+        def submit_code():
+            entered_code = str(code_entry.get())
+            self.client.request_data(1 ,data=entered_code ,type='a')
+            root.destroy()
+            while self.client.auth_succeded == -1:
+                pass
+            else:
+                if self.client.auth_succeded == 1:
+                    self.parental_control()
+                else:
+                    self.client.request_data(0)
+                    self.client.close()
+                    self.login_screen()
+
+        # Create the main window
+        root = tk.Tk()
+        root.title("2FA Authorizer")
+        root.geometry("300x150")  # You can adjust the window size as needed
+
+        # Apply the color palette
+        root.configure(bg=palette['blue_bg'])
+
+        # Title label
+        title_label = tk.Label(root, text="Enter your 2FA code:", font=('Calibri', 20), fg=palette['text_color'], bg=palette['blue_bg'])
+        title_label.pack(pady=5)
+
+        # Entry widget for the code
+        code_entry = tk.Entry(root, font=('Calibri', 14), bg=palette['text_color'])
+        code_entry.pack(pady=5)
+
+        # Submit button
+        submit_button = tk.Button(root, text="Submit", command=submit_code, font=('Calibri', 14), width=15, bg=palette['button_color'], fg=palette['text_color'], border=0)
+        submit_button.pack(pady=5)
+
+        # Start the Tkinter event loop
+        root.mainloop()
 
     def screentime(self, parental):
         def on_button_click():

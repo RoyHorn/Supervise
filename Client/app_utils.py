@@ -18,6 +18,8 @@ class Client(Thread):
         self.messages_lock = threading.Lock()
         self.sites_list = []
         self.screentime_list = []
+        self.auth_needed = False
+        self.auth_succeded = -1
         self.screentime_limit = ''
         self.block_button = ''
 
@@ -30,10 +32,10 @@ class Client(Thread):
             self.receive_messages()
 
         #responsible for responses
-        for cmmd, data in self.messages:
+        for type, cmmd, data in self.messages:
             #TODO add encryption
-            self.client_socket.send(f'{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
-            self.messages.remove((cmmd,data))
+            self.client_socket.send(f'{type}{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
+            self.messages.remove((type, cmmd, data))
             self.receive_messages()
         
     def receive_messages(self):
@@ -44,11 +46,22 @@ class Client(Thread):
         length = int(self.client_socket.recv(8).decode())
         data = self.client_socket.recv(length)
 
-        if type == 'r':
+        if type == 'a':
+            self.handle_authorization(cmmd, data)
+        elif type == 'r':
             self.handle_response(cmmd, data)
         elif type == 'u':
             self.update(cmmd)
 
+    def handle_authorization(self, cmmd, data):
+        if cmmd == '0':
+            self.auth_needed = True
+        if cmmd == '2':
+            if data.decode() == 'T':
+                self.auth_succeded = 1
+            else: 
+                self.auth_succeded = 0
+    
     def handle_response(self, cmmd, data):
         '''handels the server rsponses - for images opens the specific func, 
         for screentime shows the data in the specific window...'''
@@ -70,10 +83,10 @@ class Client(Thread):
         if cmmd == '2': #2 - unblock command
             self.set_block_button_text('Start Block')
 
-    def request_data(self, cmmd, data=''):
+    def request_data(self, cmmd, data='', type='r'):
         '''allows to gui to add messages to be sent, uses the threading lock in order to stop the thread to be able to insert to the messages list'''
         with self.messages_lock:
-            self.messages.append((cmmd, data))
+            self.messages.append((type, cmmd, data))
 
     def show_screenshot(self, data):
         '''this function translates the photo from byte back to png and shows it'''
@@ -97,7 +110,7 @@ class Client(Thread):
         self.block_button.config(text=data)
 
     def close_client(self):
-        self.client_socket.send(b'000000000')
+        self.client_socket.send(b'r000000000')
         self.client_socket.close()
 
     def open(self):
@@ -111,3 +124,10 @@ class Client(Thread):
         '''the thread start method'''
         client_thread = threading.Thread(target=self.open)
         client_thread.start()
+
+class Encryption():
+    def encrypt(public_key):
+        pass
+
+    def decrypt(private_key):
+        pass
