@@ -1,7 +1,7 @@
+from server_utils import ActiveTime, Screenshot, Block, WebBlocker, Database, TwoFactorAuthentication, Encryption
 import socket
 import select
 import datetime
-from server_utils import ActiveTime, Screenshot, Block, WebBlocker, Database, TwoFactorAuthentication
 import pickle
 import threading
 import time
@@ -81,6 +81,7 @@ class Server():
             self.messages.append(('r', 9, self.time_limit, [client]))
         elif cmmd == '0':
             client.close()
+            self.two_factor_auth.stop_code_display()
             self.client_sockets.remove(client)
         else:
             self.messages.append(('r', cmmd, msg, self.client_sockets.copy()))

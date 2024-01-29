@@ -6,6 +6,8 @@ from PIL import ImageGrab
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
 import pyotp
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 #color paletee
 palette = {
@@ -378,6 +380,27 @@ class Block(Thread):
 
     def get_block_state(self):
         return self.block_state
+
+class Encryption():
+    def __init__(self):
+        self.key = RSA.generate(1024)
+        self.public_key = self.key.publickey()
+        self.private_key = self.key
+
+    def encrypt(self, data):
+        cipher = PKCS1_OAEP.new(self.public_key)
+        ciphertext = cipher.encrypt(data)
+
+        return ciphertext
+    
+    def decrypt(self, ciphertext):
+        decrypt_cipher = PKCS1_OAEP.new(self.private_key)
+        decrypted_message = decrypt_cipher.decrypt(ciphertext)
+
+        return decrypted_message
+    
+    def get_public_key(self):
+        return self.public_key
 
 class TwoFactorAuthentication(Thread):
     def __init__(self):
