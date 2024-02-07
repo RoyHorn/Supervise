@@ -1,10 +1,10 @@
-from server_utils import ActiveTime, Screenshot, Block, WebBlocker, Database, TwoFactorAuthentication, Encryption
-import socket
-import select
 import datetime
 import pickle
+import select
+import socket
 import threading
 import time
+from server_utils import ActiveTime, Block, Database, Encryption, Screenshot, TwoFactorAuthentication, WebBlocker
 
 class Server():
     '''handles the multiuser server'''
@@ -12,6 +12,7 @@ class Server():
         self.host = host
         self.port = port
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.encryption = Encryption()
         self.block = Block()
         self.web_blocker = WebBlocker()
         self.database = Database()
@@ -21,6 +22,7 @@ class Server():
         self.database.create_time_limit_table()
         self.time_limit = self.database.get_time_limit()
         self.client_sockets = [] #contains all socket
+        self.socket_to_publickey = {}
         self.messages = [] #contains messages to be sent and recievers (msg, receivers)
         self.rlist = []
         self.wlist = []
@@ -29,29 +31,23 @@ class Server():
 
     def send_messages(self):
         '''responsible for sending messages to the corrects clients'''
-        #send messages correctly
-        for type, cmmd, msg, recivers in self.messages:
-            for reciver in recivers:
-                if reciver in self.wlist:
-                    if cmmd in (3,4,7): # specific handeling for already data already in byte format
-                        #TODO add encryption
-                        reciver.send((f'{type}{cmmd}{str(len(msg)).zfill(8)}').encode())
-                        reciver.sendall(msg)
-                        recivers.remove(reciver)
-                    else:
-                        #TODO add encryption
-                        reciver.send(f'{type}{cmmd}{str(len(str(msg))).zfill(8)}{msg}'.encode())
-                        recivers.remove(reciver)
-            if not recivers:
-                self.messages.remove((type, cmmd, msg, recivers))
+        for type, cmmd, msg, receivers in self.messages:
+            for receiver in receivers:
+                if receiver in self.wlist:
+                    cipher = self.format_message(type, cmmd, msg, receiver)
+                    receiver.send(str(len(cipher)).zfill(8).encode())
+                    receiver.sendall(cipher)
+                    receivers.remove(receiver)
+            if not receivers:
+                self.messages.remove((type, cmmd, msg, receivers))
 
     def handle_commands(self, cmmd, msg, client):
         '''responsible for giving the right response for every command'''
         if cmmd == '1': # start computer block
-            self.messages.append(('u', 1, 'blocked', self.client_sockets.copy()))
+            self.messages.append(('u', 1, '', self.client_sockets.copy()))
             self.block.start()
         elif cmmd == '2': # end computer block
-            self.messages.append(('u', 2, 'unblocked', self.client_sockets.copy()))
+            self.messages.append(('u', 2, '', self.client_sockets.copy()))
             self.block.end_block_func()
             self.block = Block()
         elif cmmd == '3': # take screenshot
@@ -73,7 +69,6 @@ class Server():
             screentime_data = pickle.dumps(self.database.get_last_week_data())
             self.messages.append(('r', 7, screentime_data, [client]))
         elif cmmd == '8': # update screentime limit
-            #TODO think how to save the screentime limit
             self.messages.append(('r', 8, self.time_limit, [client]))
         elif cmmd == '9': # quit command
             self.database.change_time_limit(msg)
@@ -107,11 +102,21 @@ class Server():
             if not self.database.is_last_log_today():
                 # means a day has passed and the server has reopened
                 self.active_time.reset_active_time()
-                self.messages.append(('u', 2, 'unblocked', self.client_sockets.copy()))
+                self.messages.append(('u', 2, '', self.client_sockets.copy()))
             if self.active_time.get_active_time() >= float(self.time_limit):
-                self.messages.append(('u', 1, 'blocked', self.client_sockets.copy()))
+                self.messages.append(('u', 1, '', self.client_sockets.copy()))
                 self.block.start()
             time.sleep(60)
+
+    def format_message(self, type, cmmd, data, client):
+        if cmmd not in (3,4,7):
+            data = str(data).encode()
+
+        msg = f'{type}{cmmd}'.encode() + data
+
+        ciphertext = self.encryption.encrypt(self.socket_to_publickey[client], msg)
+
+        return ciphertext
 
     def serve(self):
         '''starts the server, responsible for handling current users and adding new ones'''
@@ -129,24 +134,26 @@ class Server():
                     (connection, (ip, port)) = self.server_socket.accept()
                     self.client_sockets.append(connection)
                     print(f'new user connected {(ip, port)}')
+                    self.socket_to_publickey[connection] = self.encryption.recv_public_key(connection.recv(271))
+                    connection.send(self.encryption.get_public_key())
 
                     if not self.database.check_user(ip):
                         self.messages.append(('a', 0, '', [connection]))
                         self.two_factor_auth.display_code()
+                    else:
+                        self.messages.append(('a', 1, '', [connection]))
 
                     if self.block.get_block_state():
-                        self.messages.append(('u', 1, 'blocked', [client]))
+                        self.messages.append(('u', 1, '', [client]))
                     else:
-                        self.messages.append(('u', 2, 'unblocked', [client]))
+                        self.messages.append(('u', 2, '', [client]))
 
                 elif client in self.client_sockets:
                     #receive messages from connected clients
-                    #TODO add decryption
-                    type = client.recv(1).decode()
-                    cmmd = client.recv(1).decode()
+                    data_len = int(client.recv(8).decode())
+                    ciphertext = client.recv(data_len)
 
-                    msg_length = int(client.recv(8).decode())
-                    msg = client.recv(msg_length).decode()
+                    type, cmmd, msg = self.encryption.decrypt(ciphertext)
 
                     if msg == 'quit':
                         self.client_sockets.remove(client)
@@ -160,5 +167,5 @@ class Server():
 
             self.send_messages()                       
 
-a = Server('0.0.0.0',8008)
+a = Server('0.0.0.0', 8008)
 a.serve()
