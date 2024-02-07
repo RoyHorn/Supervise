@@ -8,6 +8,8 @@ import sqlite3
 import pyotp
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
+import pickle
+import gzip
 
 #color paletee
 palette = {
@@ -245,6 +247,7 @@ class Database:
         conn.close()
 
     def get_time_limit(self):
+        self.create_screentime_table()
         conn, cursor = self.connect_to_db()
 
         # Assuming that the table has already been created using create_time_limit_table method
@@ -261,6 +264,7 @@ class Database:
 
     def change_time_limit(self, new_limit):
         '''changes the time limit in the timelimit table'''
+        self.create_time_limit_table()
         conn, cursor = self.connect_to_db()
 
         # Check if the table is empty
@@ -277,13 +281,6 @@ class Database:
         # Commit changes and close the connection
         conn.commit()
         conn.close()
-
-# conn, cursor = Database().connect_to_db()
-# cursor.execute('''
-#     DELETE FROM users
-# ''')
-# conn.commit()
-# conn.close()
 
 class Block(Thread):
     '''Responsible for blocking the computer when needed'''
@@ -387,20 +384,41 @@ class Encryption():
         self.public_key = self.key.publickey()
         self.private_key = self.key
 
-    def encrypt(self, data):
-        cipher = PKCS1_OAEP.new(self.public_key)
-        ciphertext = cipher.encrypt(data)
+    def encrypt(self, key, data):
+        cipher = PKCS1_OAEP.new(key)
+        chunk_size = 86  # Adjust this value based on your key size
+        encrypted_data = b""
 
-        return ciphertext
+        for i in range(0, len(data), chunk_size):
+            chunk = data[i:i + chunk_size]
+            encrypted_chunk = cipher.encrypt(chunk)
+            encrypted_data += encrypted_chunk
+
+        return encrypted_data
     
     def decrypt(self, ciphertext):
         decrypt_cipher = PKCS1_OAEP.new(self.private_key)
-        decrypted_message = decrypt_cipher.decrypt(ciphertext)
+        chunk_size = 128  # Adjust this value based on your key size
+        decrypted_message = b""
 
-        return decrypted_message
+        for i in range(0, len(ciphertext), chunk_size):
+            chunk = ciphertext[i:i + chunk_size]
+            decrypted_chunk = decrypt_cipher.decrypt(chunk)
+            decrypted_message += decrypted_chunk
+
+        decrypted_message = decrypted_message.decode()
+        type = decrypted_message[:1]
+        cmmd = decrypted_message[1:2]
+        msg = decrypted_message[2:]
+
+        return type, cmmd, msg
     
     def get_public_key(self):
-        return self.public_key
+        pem_key = self.public_key.export_key()
+        return pem_key
+    
+    def recv_public_key(self, pem_key):
+        return RSA.import_key(pem_key)
 
 class TwoFactorAuthentication(Thread):
     def __init__(self):
@@ -494,4 +512,13 @@ class Screenshot:
     '''responsible for taking screenshot and translating to bytes'''
     def screenshot(self):
         pic = ImageGrab.grab()
-        return pic.tobytes()
+        pic_bytes = pic.tobytes()
+        compressed_pic = gzip.compress(pic_bytes)
+        return pickle.dumps(compressed_pic)
+
+# conn, cursor = Database().connect_to_db()
+# cursor.execute('''
+#     DELETE FROM users
+# ''')
+# conn.commit()
+# conn.close()

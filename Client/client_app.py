@@ -1,11 +1,11 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import re
+import time
 import tkinter as tk
 from tkinter import messagebox as mb
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from client_utils import Client, Encryption
-import pandas as pd
-import time
-import re
+from app_utils import Client
 
 palette = {
     'background_color': '#1A1A1A',
@@ -93,6 +93,11 @@ class ClientApp:
                 self.client.request_data(1)
             else:
                 self.client.request_data(2)
+
+        def on_switch_button_click():
+            parental.destroy()
+            self.client = ''
+            self.login_screen()
             
         parental = tk.Tk()
         parental.geometry('700x500')
@@ -152,7 +157,7 @@ class ClientApp:
         switch_computer_button = tk.Button(
             parental,
             text='Switch Computer',
-            command=lambda: self.client.request_data(2),
+            command= on_switch_button_click,
             font=("Calibri",14),
             bg=palette['button_color'],
             fg=palette['text_color'],
@@ -238,10 +243,11 @@ class ClientApp:
         self.client.request_data(7)
         self.client.request_data(8)
 
-        time.sleep(0.5)
-
-        screentime_data = self.client.get_screentime_list()
-        time_limit = self.client.get_screentime_limit()
+        while(self.client.get_screentime_limit() == -1 or self.client.get_screentime_list() == []):
+            pass
+        else:
+            screentime_data = self.client.get_screentime_list()
+            time_limit = self.client.get_screentime_limit()
 
         # Create a DataFrame from the data
         df = pd.DataFrame(screentime_data, columns=['Date', 'Time'])

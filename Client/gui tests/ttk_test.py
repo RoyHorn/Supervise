@@ -1,7 +1,7 @@
 import tkinter as tk
 import ttkbootstrap as ttk
 from tkinter import messagebox as mb
-from Client.client_utils import Client
+from Client.app_utils import Client
 import time
 import re
 
