@@ -1,11 +1,12 @@
-import socket, threading
-from threading import Thread
-from PIL import Image
-from icecream import ic
-import pickle
 import select
-from Crypto.PublicKey import RSA
+import socket
+import threading
+from PIL import Image
+import pickle
 from Crypto.Cipher import PKCS1_OAEP
+from Crypto.PublicKey import RSA
+from threading import Thread
+import gzip
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -16,6 +17,7 @@ class Client(Thread):
         self.rlist = []
         self.wlist = []
         self.xlist = []
+        self.encryption = Encryption()
         self.server_public_key = ''
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
@@ -23,7 +25,7 @@ class Client(Thread):
         self.screentime_list = []
         self.auth_needed = -1
         self.auth_succeded = -1
-        self.screentime_limit = ''
+        self.screentime_limit = -1
         self.block_button = ''
 
     def send_receive_messages(self):
@@ -36,18 +38,18 @@ class Client(Thread):
 
         #responsible for responses
         for type, cmmd, data in self.messages:
-            #TODO add encryption
-            self.client_socket.send(f'{type}{cmmd}{str(len(data)).zfill(8)}{data}'.encode())
+            cipher = self.format_message(type, cmmd, data)
+            self.client_socket.send(str(len(cipher)).zfill(8).encode())
+            self.client_socket.sendall(cipher)
             self.messages.remove((type, cmmd, data))
             self.receive_messages()
         
     def receive_messages(self):
         '''recives the response from the server in chunks then moves to the correct place according to type(response or update)'''
-        #TODO add decryption
-        type = self.client_socket.recv(1).decode()
-        cmmd = self.client_socket.recv(1).decode()
-        length = int(self.client_socket.recv(8).decode())
-        data = self.client_socket.recv(length)
+        data_len = int(self.client_socket.recv(8).decode())
+        ciphertext = self.client_socket.recv(data_len)
+
+        type, cmmd, data = self.encryption.decrypt(ciphertext)
 
         if type == 'a':
             self.handle_authorization(cmmd, data)
@@ -59,7 +61,9 @@ class Client(Thread):
     def handle_authorization(self, cmmd, data):
         if cmmd == '0':
             self.auth_needed = 1
-        if cmmd == '2':
+        elif cmmd == '1':
+            self.auth_needed = 0
+        elif cmmd == '2':
             if data.decode() == 'T':
                 self.auth_succeded = 1
             else: 
@@ -69,7 +73,7 @@ class Client(Thread):
         '''handels the server rsponses - for images opens the specific func, 
         for screentime shows the data in the specific window...'''
         if cmmd == '3': #3 - screenshot command
-            self.show_screenshot(data)
+            self.show_screenshot(pickle.loads(data))
         elif cmmd == '4':
             self.sites_list = pickle.loads(data)
         elif cmmd == '7':
@@ -86,6 +90,13 @@ class Client(Thread):
         if cmmd == '2': #2 - unblock command
             self.set_block_button_text('Start Block')
 
+    def format_message(self, type, cmmd, data=''):
+        msg = f'{type}{cmmd}{data}'.encode()
+
+        ciphertext = self.encryption.encrypt(self.server_public_key, msg)
+
+        return ciphertext
+
     def request_data(self, cmmd, data='', type='r'):
         '''allows to gui to add messages to be sent, uses the threading lock in order to stop the thread to be able to insert to the messages list'''
         with self.messages_lock:
@@ -93,7 +104,8 @@ class Client(Thread):
 
     def show_screenshot(self, data):
         '''this function translates the photo from byte back to png and shows it'''
-        image = Image.frombytes("RGB", (1920, 1080), data)
+        decompressed_data = gzip.decompress(data)
+        image = Image.frombytes("RGB", (1920, 1080), decompressed_data)
         image.show()
 
     def get_sites_list(self):
@@ -113,12 +125,16 @@ class Client(Thread):
         self.block_button.config(text=data)
 
     def close_client(self):
-        self.client_socket.send(b'r000000000')
+        cipher = self.format_message('r', 0)
+        self.client_socket.send(str(len(cipher)).zfill(8).encode())
+        self.client_socket.sendall(cipher)
         self.client_socket.close()
 
     def open(self):
         '''runs the client, connects to the server'''
         self.client_socket.connect((self.host, self.port))
+        self.client_socket.send(self.encryption.get_public_key())
+        self.server_public_key = self.encryption.recv_public_key(self.client_socket.recv(271))
 
         while True:
             self.send_receive_messages()
@@ -134,17 +150,37 @@ class Encryption():
         self.public_key = self.key.publickey()
         self.private_key = self.key
 
-    def encrypt(self, data):
-        cipher = PKCS1_OAEP.new(self.public_key)
-        ciphertext = cipher.encrypt(data)
+    def encrypt(self, key, data):
+        cipher = PKCS1_OAEP.new(key)
+        chunk_size = 128  # Adjust this value based on your key size
+        encrypted_data = b""
 
-        return ciphertext
+        for i in range(0, len(data), chunk_size):
+            chunk = data[i:i + chunk_size]
+            encrypted_chunk = cipher.encrypt(chunk)
+            encrypted_data += encrypted_chunk
+
+        return encrypted_data
     
     def decrypt(self, ciphertext):
         decrypt_cipher = PKCS1_OAEP.new(self.private_key)
-        decrypted_message = decrypt_cipher.decrypt(ciphertext)
+        chunk_size = 128  # Adjust this value based on your key size
+        decrypted_message = b""
 
-        return decrypted_message
+        for i in range(0, len(ciphertext), chunk_size):
+            chunk = ciphertext[i:i + chunk_size]
+            decrypted_chunk = decrypt_cipher.decrypt(chunk)
+            decrypted_message += decrypted_chunk
+
+        type = decrypted_message[:1].decode()
+        cmmd = decrypted_message[1:2].decode()
+        data = decrypted_message[2:]
+
+        return (type, cmmd, data)
     
     def get_public_key(self):
-        return self.public_key
+        pem_key = self.public_key.export_key()
+        return pem_key
+    
+    def recv_public_key(self, pem_key):
+        return RSA.import_key(pem_key)
