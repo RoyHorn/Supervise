@@ -3,7 +3,7 @@ import customtkinter as ctk
 from ctk_settings import *
 from CTkListbox import *
 from tkinter import messagebox as mb
-from app_utils import Client
+from Client.client_utils import Client
 from icecream import ic
 import re, time
 

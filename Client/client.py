@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox as mb
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from app_utils import Client
+from client_utils import Client, Encryption
 import pandas as pd
 import time
 import re
@@ -31,12 +31,13 @@ class ClientApp:
                 self.client = Client(self.ip, 8008)
                 self.client.start()
 
-                time.sleep(0.5)
-
-                if self.client.auth_needed:
-                    self.create_2fa_window()
+                while self.client.auth_needed == -1:
+                    pass
                 else:
-                    self.parental_control()
+                    if self.client.auth_needed:
+                        self.create_2fa_window()
+                    else:
+                        self.parental_control()
             else:
                 mb.showerror(title="IP Error", message="Check your ip address and try again")
 
@@ -186,8 +187,10 @@ class ClientApp:
                 if self.client.auth_succeded == 1:
                     self.parental_control()
                 else:
-                    self.client.request_data(0)
-                    self.client.close()
+                    self.client.close_client()
+                    self.client = ''
+                    self.client.auth_needed = -1
+                    self.client.auth_succeded = -1
                     self.login_screen()
 
         # Create the main window

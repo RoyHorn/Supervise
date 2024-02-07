@@ -4,6 +4,8 @@ from PIL import Image
 from icecream import ic
 import pickle
 import select
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 class Client(Thread):
     def __init__(self, host, port):
@@ -14,11 +16,12 @@ class Client(Thread):
         self.rlist = []
         self.wlist = []
         self.xlist = []
+        self.server_public_key = ''
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
         self.sites_list = []
         self.screentime_list = []
-        self.auth_needed = False
+        self.auth_needed = -1
         self.auth_succeded = -1
         self.screentime_limit = ''
         self.block_button = ''
@@ -55,7 +58,7 @@ class Client(Thread):
 
     def handle_authorization(self, cmmd, data):
         if cmmd == '0':
-            self.auth_needed = True
+            self.auth_needed = 1
         if cmmd == '2':
             if data.decode() == 'T':
                 self.auth_succeded = 1
@@ -126,8 +129,22 @@ class Client(Thread):
         client_thread.start()
 
 class Encryption():
-    def encrypt(public_key):
-        pass
+    def __init__(self):
+        self.key = RSA.generate(1024)
+        self.public_key = self.key.publickey()
+        self.private_key = self.key
 
-    def decrypt(private_key):
-        pass
+    def encrypt(self, data):
+        cipher = PKCS1_OAEP.new(self.public_key)
+        ciphertext = cipher.encrypt(data)
+
+        return ciphertext
+    
+    def decrypt(self, ciphertext):
+        decrypt_cipher = PKCS1_OAEP.new(self.private_key)
+        decrypted_message = decrypt_cipher.decrypt(ciphertext)
+
+        return decrypted_message
+    
+    def get_public_key(self):
+        return self.public_key
