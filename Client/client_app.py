@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
-import time
 import tkinter as tk
 from tkinter import messagebox as mb
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -243,7 +242,7 @@ class ClientApp:
         self.client.request_data(7)
         self.client.request_data(8)
 
-        while(self.client.get_screentime_limit() == -1 or self.client.get_screentime_list() == []):
+        while(self.client.get_screentime_limit() == -1 or self.client.get_screentime_list() == -1):
             pass
         else:
             screentime_data = self.client.get_screentime_list()
@@ -289,6 +288,9 @@ class ClientApp:
         daily_limit_entry.pack()
         daily_limit_button.pack()
         canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        self.client.screentime_list = -1
+        self.client.screentime_limit = -1
 
         screentime.mainloop()
     
@@ -347,8 +349,11 @@ class ClientApp:
         remove_button.place(relx=0.58, rely=0.65)
 
         self.client.request_data(4)
-        time.sleep(0.5) #allows the current sites list to be loaded
-        website_list = self.client.get_sites_list()
+        while self.client.get_sites_list() == -1:
+            pass
+        else:
+            website_list = self.client.get_sites_list()
+            self.client.sites_list = -1
         if len(website_list)>0:
             for website in website_list:
                 listbox.insert(tk.END, website)

@@ -2,7 +2,7 @@ from threading import Thread
 import threading
 from win32api import GetLastInputInfo
 from datetime import datetime, timedelta
-from PIL import ImageGrab
+from PIL import ImageGrab, ImageFilter, ImageTk
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
 import pyotp
@@ -314,11 +314,15 @@ class Block(Thread):
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', True)
         self.root.title("block")
-        self.root['background'] = palette['background_color']
+        self.root['background'] = palette['blue_bg']
+
+        bg_blurred = ImageTk.PhotoImage(ImageGrab.grab().filter(ImageFilter.GaussianBlur(radius=5)))
 
         # keeps the self.root on top
         self.root.wm_attributes("-topmost", True)
         self.root.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        bg_label = tk.Label(self.root, image=bg_blurred)
 
         logo = tk.Label(
             self.root,
@@ -345,6 +349,7 @@ class Block(Thread):
         )
 
         tk.Button(self.root, text='exit', command=close).place(rely=0.95, relx=0.12, anchor='center')
+        bg_label.pack()
         message.place(relx=0.5, rely=0.45, anchor='center')
         limit.place(relx=0.5, rely=0.55, anchor='center')
         logo.place(relx=0.5, rely=0.9, anchor='center')

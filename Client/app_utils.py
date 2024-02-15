@@ -21,8 +21,8 @@ class Client(Thread):
         self.server_public_key = ''
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
-        self.sites_list = []
-        self.screentime_list = []
+        self.sites_list = -1
+        self.screentime_list = -1
         self.auth_needed = -1
         self.auth_succeded = -1
         self.screentime_limit = -1
