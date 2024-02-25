@@ -10,6 +10,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import pickle
 import gzip
+import platform
 
 #color paletee
 palette = {
@@ -477,9 +478,18 @@ class TwoFactorAuthentication(Thread):
 class WebBlocker:
     '''responsible for blocking access to specific web pages using os hosts files'''
     def __init__(self):
-        self.path = 'C:/Windows/system32/drivers/etc/hosts'
+        self.path = self.get_hosts_file_location()
         self.redirect = '127.0.0.1'
         self.blocked_sites = self.get_sites()
+
+    def get_hosts_file_location(self):
+        system = platform.system()
+        if system == "Windows":
+            return r'C:\Windows\System32\drivers\etc\hosts'
+        elif system == "Linux" or system == "Darwin":
+            return '/etc/hosts'
+        else:
+            raise OSError("Unsupported operating system")
 
     def get_sites(self):
         '''gets the sites list from the hosts os file'''

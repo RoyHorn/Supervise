@@ -95,10 +95,11 @@ class Server():
     def update_handler(self):
         while True:
             time_now = datetime.datetime.now().time()
-            if time_now.minute % 2 == 0:
+            if time_now.minute % 1 == 0:
                 today_date = datetime.datetime.now().strftime("%Y-%m-%d")
                 time_active = self.active_time.get_active_time()
                 self.database.log_screentime(today_date, time_active)
+                self.web_blocker.update_file()
             if not self.database.is_last_log_today():
                 # means a day has passed and the server has reopened
                 self.active_time.reset_active_time()
