@@ -2,7 +2,7 @@ from threading import Thread
 import threading
 from win32api import GetLastInputInfo
 from datetime import datetime, timedelta
-from PIL import ImageGrab, ImageFilter, ImageTk
+from PIL import ImageGrab
 import time, keyboard, tkinter as tk, datetime as dt
 import sqlite3
 import pyotp
@@ -11,6 +11,8 @@ from Crypto.Cipher import PKCS1_OAEP
 import pickle
 import gzip
 import platform
+import os
+import subprocess
 
 #color paletee
 palette = {
@@ -317,19 +319,15 @@ class Block(Thread):
         self.root.title("block")
         self.root['background'] = palette['blue_bg']
 
-        bg_blurred = ImageTk.PhotoImage(ImageGrab.grab().filter(ImageFilter.GaussianBlur(radius=5)))
-
         # keeps the self.root on top
         self.root.wm_attributes("-topmost", True)
         self.root.protocol("WM_DELETE_WINDOW", lambda: None)
-
-        bg_label = tk.Label(self.root, image=bg_blurred)
 
         logo = tk.Label(
             self.root,
             text="Supervise.",
             font=("CoolveticaRg-Regular", 25),
-            bg=palette['background_color'],
+            bg=palette['blue_bg'],
             fg=palette['text_color']
         )
 
@@ -337,7 +335,7 @@ class Block(Thread):
             self.root,
             text="Buddy, you have reached your time limit...",
             font=("CoolveticaRg-Regular", 60),
-            bg=palette['background_color'],
+            bg=palette['blue_bg'],
             fg=palette['text_color']
         )
 
@@ -345,12 +343,11 @@ class Block(Thread):
             self.root,
             text="You can access your computer back tomorrow",
             font=("CoolveticaRg-Regular", 30),
-            bg=palette['background_color'],
+            bg=palette['blue_bg'],
             fg=palette['text_color']
         )
 
-        tk.Button(self.root, text='exit', command=close).place(rely=0.95, relx=0.12, anchor='center')
-        bg_label.pack()
+        # tk.Button(self.root, text='exit', command=close).place(rely=0.95, relx=0.12, anchor='center')
         message.place(relx=0.5, rely=0.45, anchor='center')
         limit.place(relx=0.5, rely=0.55, anchor='center')
         logo.place(relx=0.5, rely=0.9, anchor='center')
@@ -481,6 +478,7 @@ class WebBlocker:
         self.path = self.get_hosts_file_location()
         self.redirect = '127.0.0.1'
         self.blocked_sites = self.get_sites()
+        self.output_file = 'browsing_history.txt'
 
     def get_hosts_file_location(self):
         system = platform.system()
@@ -522,6 +520,45 @@ class WebBlocker:
         '''responsible for removing sites from the block site'''
         self.blocked_sites.remove(domain)
         self.update_file()
+
+    def extract_history(self, history_db):
+        # Close chrome in order to access its database
+        os.system("taskkill /f /im chrome.exe")
+
+        c = sqlite3.connect(history_db)
+        cursor = c.cursor()
+        select_statement = """SELECT
+                                DISTINCT u.url AS URL, 
+                                u.title AS Title, 
+                                -- Convert the Unix timestamp to a human-readable date and time format
+                                strftime('%m-%d-%Y %H:%M', (u.last_visit_time/1000000.0) - 11644473600, 'unixepoch', 'localtime') AS "Last Visited Date Time"
+                            FROM
+                                urls u,
+                                visits v 
+                            WHERE
+                                u.id = v.url
+                            ORDER BY
+                                u.last_visit_time DESC -- Order by last visited time in descending order
+                            LIMIT 20;
+                            """
+        cursor.execute(select_statement)
+        results = cursor.fetchall()
+        c.close()
+        
+        return results
+        
+    def build_history_string(self):
+        # Get the user directory dynamically
+        user_dir = os.path.expanduser("~")
+        history_db = os.path.join(user_dir, 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'History')
+
+        history_data = self.extract_history(history_db)
+
+        browsing_history = {}
+        for url, title, last_visit_time in history_data:
+            browsing_history[f"{last_visit_time} - {title}"] = url
+
+        return browsing_history
 
 class Screenshot:
     '''responsible for taking screenshot and translating to bytes'''

@@ -53,9 +53,11 @@ class Server():
         elif cmmd == '3': # take screenshot
             image = Screenshot().screenshot()
             self.messages.append(('r', 3, image, [client]))
-        elif cmmd == '4': # request web blocker blocked list
+        elif cmmd == '4': # request web blocker blocked list and browsing history
             web_list = pickle.dumps(self.web_blocker.get_sites())
+            browsing_history = pickle.dumps(self.web_blocker.build_history_string())
             self.messages.append(('r', 4, web_list, [client]))
+            self.messages.append(('r', 4, browsing_history, [client]))
         elif cmmd == '5': # add website to blocker
             self.messages.append(('r', 5, msg, [client]))
             self.web_blocker.add_website(msg)
@@ -68,13 +70,13 @@ class Server():
             self.database.log_screentime(today_date, time_active)
             screentime_data = pickle.dumps(self.database.get_last_week_data())
             self.messages.append(('r', 7, screentime_data, [client]))
-        elif cmmd == '8': # update screentime limit
+        elif cmmd == '8': # request screentime limit
             self.messages.append(('r', 8, self.time_limit, [client]))
-        elif cmmd == '9': # quit command
+        elif cmmd == '9': # update screentime limit
             self.database.change_time_limit(msg)
             self.time_limit = msg
             self.messages.append(('r', 9, self.time_limit, [client]))
-        elif cmmd == '0':
+        elif cmmd == '0': # quit
             client.close()
             self.two_factor_auth.stop_code_display()
             self.client_sockets.remove(client)

@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import messagebox as mb
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from app_utils import Client
+import os
 
 palette = {
     'background_color': '#1A1A1A',
@@ -300,33 +301,54 @@ class ClientApp:
         def on_add_button_click():
             website = website_entry.get()
             if website:  # Ensure the entry isn't empty
-                listbox.insert(tk.END, website)
+                website_listbox.insert(tk.END, website)
                 website_entry.delete(0, tk.END)  # Clear the entry after adding
                 self.client.request_data(5, website)
+            else:
+                try:
+                    selected_index = history_listbox.curselection()[0]
+                    website = browsing_history[history_listbox.get(selected_index)]
+                except:
+                    pass
+
+                if website:
+                    website_listbox.insert(tk.END, website)
+                    self.client.request_data(5, website)
 
         def on_remove_button_click():
             try:
-                selected_index = listbox.curselection()[0]  # Get the index of the selected item
-                website = listbox.get(selected_index)
-                listbox.delete(selected_index)  # Remove the selected item
+                selected_index = website_listbox.curselection()[0]  # Get the index of the selected item
+                website = website_listbox.get(selected_index)
+                website_listbox.delete(selected_index)  # Remove the selected item
                 self.client.request_data(6, website)
+            except IndexError:  # Handle the case where no item is selected
+                pass  # Do nothing if no item is selected
+        
+        def on_browsing_history_listbox_click(event):
+            try:
+                selected_index = history_listbox.curselection()[0]  # Get the index of the selected item
+                website = browsing_history[history_listbox.get(selected_index)]
+                os.system(f"start \"\" {website}")
             except IndexError:  # Handle the case where no item is selected
                 pass  # Do nothing if no item is selected
 
 
         web_blocker = tk.Toplevel(parental)
+        web_blocker.resizable(False, False) 
         web_blocker.geometry('700x500')
         web_blocker.title("Web Blocker")
         web_blocker['background'] = palette['background_color']
 
-        listbox = tk.Listbox(web_blocker)
+        history_listbox = tk.Listbox(web_blocker, width=60, height=14)
+        history_listbox.bind("<Double-Button>", on_browsing_history_listbox_click)
+        website_listbox = tk.Listbox(web_blocker, width=22)
         website_entry = tk.Entry(
             web_blocker,
-            width=30
+            width=22
         )
         add_button = tk.Button(
             web_blocker,
-            text='Add Website',
+            text=' Add ',
             command=lambda: on_add_button_click(),
             font=("Calibri",14),
             bg=palette['button_color'],
@@ -335,7 +357,7 @@ class ClientApp:
         )
         remove_button = tk.Button(
             web_blocker,
-            text='Remove Website',
+            text=' Remove ',
             command=lambda: on_remove_button_click(),
             font=("Calibri",14),
             bg=palette['button_color'],
@@ -343,20 +365,33 @@ class ClientApp:
             border=0
         )
 
-        listbox.place(relx=0.6, rely=0.3)
-        website_entry.place(relx=0.2, rely=0.4)
-        add_button.place(relx=0.25, rely=0.45)
-        remove_button.place(relx=0.58, rely=0.65)
+        # website_listbox.place(relx=0.6, rely=0.3)
+        # website_entry.place(relx=0.2, rely=0.4)
+        # add_button.place(relx=0.25, rely=0.45)
+        # remove_button.place(relx=0.58, rely=0.65)
+
+        history_listbox.place(relx=0.35, rely=0.2)
+        website_listbox.place(relx=0.1, rely=0.2)
+        website_entry.place(relx=0.1, rely=0.55)
+        add_button.place(relx=0.1, rely=0.61)
+        remove_button.place(relx=0.175, rely=0.61)
+        
 
         self.client.request_data(4)
-        while self.client.get_sites_list() == -1:
+        #TODO: REWRITE THIS PART TO NOT BLOCK THE RUN - ALSO FOR SCREENTIME
+        while self.client.sites_list == -1 or self.client.browsing_history == -1:
             pass
         else:
-            website_list = self.client.get_sites_list()
+            website_list = self.client.sites_list
+            browsing_history = self.client.browsing_history
             self.client.sites_list = -1
+            self.client.browsing_history = -1
         if len(website_list)>0:
             for website in website_list:
-                listbox.insert(tk.END, website)
+                website_listbox.insert(tk.END, website)
+        if len(browsing_history)>0:
+            for site in browsing_history.keys():
+                history_listbox.insert(tk.END, site)
 
 if __name__== '__main__':
     app = ClientApp()

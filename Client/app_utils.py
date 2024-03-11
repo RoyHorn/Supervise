@@ -22,6 +22,7 @@ class Client(Thread):
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
         self.sites_list = -1
+        self.browsing_history = -1
         self.screentime_list = -1
         self.auth_needed = -1
         self.auth_succeded = -1
@@ -43,11 +44,13 @@ class Client(Thread):
             self.client_socket.sendall(cipher)
             self.messages.remove((type, cmmd, data))
             self.receive_messages()
+
         
     def receive_messages(self):
         '''recives the response from the server in chunks then moves to the correct place according to type(response or update)'''
         data_len = int(self.client_socket.recv(8).decode())
         ciphertext = self.client_socket.recv(data_len)
+        #TODO: add recv all function
 
         type, cmmd, data = self.encryption.decrypt(ciphertext)
 
@@ -75,7 +78,11 @@ class Client(Thread):
         if cmmd == '3': #3 - screenshot command
             self.show_screenshot(pickle.loads(data))
         elif cmmd == '4':
-            self.sites_list = pickle.loads(data)
+            data = pickle.loads(data)
+            if isinstance(data, list):
+                self.sites_list = data
+            else:
+                self.browsing_history = data
         elif cmmd == '7':
             self.screentime_list = pickle.loads(data)
         elif cmmd == '8':
