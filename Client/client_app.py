@@ -231,8 +231,36 @@ class ClientApp:
                 daily_limit_button['text'] = 'Change'
                 daily_limit_entry.insert(0, daily_limit_entry.get())
                 self.client.request_data(9, daily_limit_entry.get())
-                limit_line.set_ydata([float(daily_limit_entry.get())])  # Update the y-data of the limit line
-                canvas.draw()
+                update_limitline(float(daily_limit_entry.get()))  # Update the y-data of the limit line
+
+        def update_date(screentime_data, time_limit):
+            # Create a DataFrame from the data
+            df = pd.DataFrame(screentime_data, columns=['Date', 'Time'])
+            # Convert the 'Date' column to datetime format
+            df['Date'] = pd.to_datetime(df['Date'])
+            # Format the 'Date' column to dd/mm/yy
+            df['Date'] = df['Date'].dt.strftime('%d/%m/%y')
+
+            # Plotting the bar graph
+            bars = ax.bar(df['Date'], df['Time'], color=palette['blue_bg'])
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Screen Time (hours)')
+
+            # Hide dates without data
+            ax.set_xticks(df['Date'])
+
+            # Add weekly average line
+            weekly_avg = df['Time'].mean()
+            avg_line = ax.axhline(y=weekly_avg, color='red', linestyle='--', label=f'Weekly Avg: {weekly_avg:.2f} hours')
+            global limit_line
+            limit_line = ax.axhline(y=float(time_limit), color='green', linestyle='-', label=f'Daily Limit: {float(time_limit):2f} hours')
+
+            canvas.draw()
+
+        def update_limitline(new_limit):
+            global limit_line
+            limit_line.set_ydata(float(new_limit))  # Update the y-data of the limit line
+            canvas.draw()
 
         '''recives data from the server about screen time from the server and shows it nicely'''
         screentime = tk.Toplevel(parental)
@@ -240,45 +268,16 @@ class ClientApp:
         screentime.title("Screen Time")
         screentime['background'] = palette['blue_bg']
 
-        self.client.request_data(7)
-        self.client.request_data(8)
-
-        while(self.client.get_screentime_limit() == -1 or self.client.get_screentime_list() == -1):
-            pass
-        else:
-            screentime_data = self.client.get_screentime_list()
-            time_limit = self.client.get_screentime_limit()
-
-        # Create a DataFrame from the data
-        df = pd.DataFrame(screentime_data, columns=['Date', 'Time'])
-        # Convert the 'Date' column to datetime format
-        df['Date'] = pd.to_datetime(df['Date'])
-        # Format the 'Date' column to dd/mm/yy
-        df['Date'] = df['Date'].dt.strftime('%d/%m/%y')
-        # Create a Matplotlib figure and axis for the graph
-        fig, ax = plt.subplots()
-
-        # Plotting the bar graph
-        bars = ax.bar(df['Date'], df['Time'], color=palette['blue_bg'])
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Screen Time (hours)')
-
-        # Hide dates without data
-        ax.set_xticks(df['Date'])
-
-        # Add weekly average line
-        weekly_avg = df['Time'].mean()
-        avg_line = ax.axhline(y=weekly_avg, color='red', linestyle='--', label=f'Weekly Avg: {weekly_avg:.2f} hours')
-        limit_line = ax.axhline(y=float(time_limit), color='green', linestyle='-', label=f'Daily Limit: {float(time_limit):.2f} hours')
-
         # Add a title label
         title_label = tk.Label(screentime, text='Screen Time', font=('Helvetica', 16, 'bold'), fg='white', bg='#087CA7')
 
         daily_limit_label = tk.Label(screentime, text = 'Daily Limit', fg='white', bg='#087CA7')
         daily_limit_entry = tk.Entry(screentime, width=10)
-        daily_limit_entry.insert(0, time_limit)
         daily_limit_entry.config(state='disabled')
         daily_limit_button = tk.Button(screentime, text  = 'Change', command = on_button_click)
+
+        fig, ax = plt.subplots()
+        limit_line = None
 
         # Embed the Matplotlib figure in the Tkinter window
         canvas = FigureCanvasTkAgg(fig, master=screentime)
@@ -290,10 +289,25 @@ class ClientApp:
         daily_limit_button.pack()
         canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        self.client.screentime_list = -1
-        self.client.screentime_limit = -1
+        self.client.request_data(7)
+        self.client.request_data(8)
 
-        screentime.mainloop()
+        while True:
+            screentime.update()
+            screentime.update_idletasks()
+
+            if self.client.get_screentime_limit() != -1 and self.client.get_screentime_list() != -1:
+                screentime_data = self.client.get_screentime_list()
+                time_limit = self.client.get_screentime_limit()
+
+                update_date(screentime_data, time_limit)
+
+                daily_limit_entry.config(state='normal')
+                daily_limit_entry.insert(0, time_limit)
+                daily_limit_entry.config(state='disabled')
+
+                self.client.screentime_list = -1
+                self.client.screentime_limit = -1
     
     def web_blocker(self,parental):
         '''takes information about the blocked sites from the hosts file on server, formats it and shows it nicely -
@@ -332,7 +346,6 @@ class ClientApp:
             except IndexError:  # Handle the case where no item is selected
                 pass  # Do nothing if no item is selected
 
-
         web_blocker = tk.Toplevel(parental)
         web_blocker.resizable(False, False) 
         web_blocker.geometry('700x500')
@@ -365,11 +378,6 @@ class ClientApp:
             border=0
         )
 
-        # website_listbox.place(relx=0.6, rely=0.3)
-        # website_entry.place(relx=0.2, rely=0.4)
-        # add_button.place(relx=0.25, rely=0.45)
-        # remove_button.place(relx=0.58, rely=0.65)
-
         history_listbox.place(relx=0.35, rely=0.2)
         website_listbox.place(relx=0.1, rely=0.2)
         website_entry.place(relx=0.1, rely=0.55)
@@ -378,20 +386,25 @@ class ClientApp:
         
 
         self.client.request_data(4)
-        #TODO: REWRITE THIS PART TO NOT BLOCK THE RUN - ALSO FOR SCREENTIME
-        while self.client.sites_list == -1 or self.client.browsing_history == -1:
-            pass
-        else:
-            website_list = self.client.sites_list
-            browsing_history = self.client.browsing_history
-            self.client.sites_list = -1
-            self.client.browsing_history = -1
-        if len(website_list)>0:
-            for website in website_list:
-                website_listbox.insert(tk.END, website)
-        if len(browsing_history)>0:
-            for site in browsing_history.keys():
-                history_listbox.insert(tk.END, site)
+
+        while True:
+            web_blocker.update()
+            web_blocker.update_idletasks()
+
+            if self.client.sites_list != -1 and self.client.browsing_history != -1:
+                website_list = self.client.sites_list
+                browsing_history = self.client.browsing_history
+
+                self.client.sites_list = -1
+                self.client.browsing_history = -1
+
+                if len(website_list)>0:
+                    for website in website_list:
+                        website_listbox.insert(tk.END, website)
+                if len(browsing_history)>0:
+                    for site in browsing_history.keys():
+                        history_listbox.insert(tk.END, site)
+
 
 if __name__== '__main__':
     app = ClientApp()

@@ -12,7 +12,6 @@ import pickle
 import gzip
 import platform
 import os
-import subprocess
 
 #color paletee
 palette = {
@@ -544,6 +543,8 @@ class WebBlocker:
         cursor.execute(select_statement)
         results = cursor.fetchall()
         c.close()
+
+        os.system("start \"\" https://www.google.com")
         
         return results
         
