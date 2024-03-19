@@ -11,7 +11,7 @@ r0. Quit
 r1. Block Screen
 r2. Unblock Screen
 r3. Take Screenshot
-r4. Request blocked web list
+r4. Request blocked web list and browsing history
 r5. Add website to webblocker
 r6. Remove website from webblocker
 r7. Request last week screentime data

@@ -83,16 +83,16 @@ class Server():
         else:
             self.messages.append(('r', cmmd, msg, self.client_sockets.copy()))
 
-    def handle_authorization(self, cmmd, code, client):
-        if cmmd == '1':
-            if self.two_factor_auth.verify_code(int(code)):
-                self.messages.append(('a', 2, 'T', [client]))
-                self.two_factor_auth.stop_code_display()
-                client_ip, _ = client.getpeername()
-                self.database.insert_user(client_ip)
-            else:
-                self.messages.append(('a', 2, 'F', [client]))
-                self.client_sockets.remove(client)
+    def handle_authorization(self, code, client):
+        if self.two_factor_auth.verify_code(int(code)):
+            self.messages.append(('a', 2, 'T', [client]))
+            client_ip, _ = client.getpeername()
+            self.database.insert_user(client_ip)
+        else:
+            self.messages.append(('a', 2, 'F', [client]))
+            self.client_sockets.remove(client)
+
+        self.two_factor_auth.stop_code_display()
 
     def update_handler(self):
         while True:
@@ -164,7 +164,7 @@ class Server():
                         break
                     
                     if type == 'a':
-                        self.handle_authorization(cmmd, msg, client)
+                        self.handle_authorization(msg, client)
                     elif type == 'r':
                         self.handle_commands(cmmd, msg, client)
 

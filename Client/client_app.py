@@ -184,19 +184,21 @@ class ClientApp:
     def create_2fa_window(self):
         def submit_code():
             entered_code = str(code_entry.get())
-            self.client.request_data(1 ,data=entered_code ,type='a')
-            root.destroy()
-            while self.client.auth_succeded == -1:
-                pass
-            else:
-                if self.client.auth_succeded == 1:
-                    self.parental_control()
+            if entered_code:
+                self.client.request_data(1 ,data=entered_code ,type='a')
+                root.destroy()
+                while self.client.auth_succeded == -1:
+                    pass
                 else:
-                    self.client.close_client()
-                    self.client = ''
-                    self.client.auth_needed = -1
-                    self.client.auth_succeded = -1
-                    self.login_screen()
+                    if self.client.auth_succeded == 1:
+                        self.parental_control()
+                    else:
+                        mb.showerror("Error", "Invalid code, try again.")
+                        self.login_screen()
+                        self.client.close_client()
+                        self.client = ''
+                        self.client.auth_needed = -1
+                        self.client.auth_succeded = -1
 
         # Create the main window
         root = tk.Tk()
