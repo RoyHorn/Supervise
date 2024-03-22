@@ -23,6 +23,12 @@ class ClientApp:
         self.login_screen()
 
     def login_screen(self):
+        """Displays the login screen GUI and handles user login.
+        
+        This function shows the login screen, gets the IP address from the
+        user, attempts to connect to that IP, and handles any errors. It
+        does not return until a successful connection is made.
+        """
         def on_login_button_click():
             self.ip = ip_entry.get()
             ip_regex = r'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'
@@ -83,7 +89,11 @@ class ClientApp:
         login.mainloop()
             
     def parental_control(self):
-        '''opens after connecting to the server and holds all of the main functions of the app'''
+        """parental_control handles the parental control interface after successful login.
+        
+        This shows the parental control UI and handles related logic.
+        """
+
         def on_window_close(): #TODO make it work
             parental.destroy()
             self.client.close_client()
@@ -182,6 +192,10 @@ class ClientApp:
         parental.mainloop()
 
     def create_2fa_window(self):
+        """
+        Creates and displays the 2FA authentication window.
+        """
+
         def submit_code():
             entered_code = str(code_entry.get())
             if entered_code:
@@ -224,6 +238,12 @@ class ClientApp:
         root.mainloop()
 
     def screentime(self, parental):
+        """Displays the screentime screen.
+        
+        Parameters:
+            parental (tk.Tk): The parental control window object.
+        """
+
         def on_button_click():
             if daily_limit_entry['state'] == 'disabled':
                 daily_limit_entry['state'] = 'normal'
@@ -312,8 +332,15 @@ class ClientApp:
                 self.client.screentime_limit = -1
     
     def web_blocker(self,parental):
-        '''takes information about the blocked sites from the hosts file on server, formats it and shows it nicely -
-        allows to add/remove sites from the list'''
+        '''web_blocker: Displays the web blocking GUI to allow parents to block websites.
+        
+        Parameters:
+            parental (tk.Tk): The main parental control Tkinter window.
+        
+        Returns:
+            None
+        '''
+
         def on_add_button_click():
             website = website_entry.get()
             if website:  # Ensure the entry isn't empty
@@ -393,11 +420,11 @@ class ClientApp:
             web_blocker.update()
             web_blocker.update_idletasks()
 
-            if self.client.sites_list != -1 and self.client.browsing_history != -1:
-                website_list = self.client.sites_list
+            if self.client.blocked_sites != -1 and self.client.browsing_history != -1:
+                website_list = self.client.blocked_sites
                 browsing_history = self.client.browsing_history
 
-                self.client.sites_list = -1
+                self.client.blocked_sites = -1
                 self.client.browsing_history = -1
 
                 if len(website_list)>0:
@@ -406,7 +433,6 @@ class ClientApp:
                 if len(browsing_history)>0:
                     for site in browsing_history.keys():
                         history_listbox.insert(tk.END, site)
-
 
 if __name__== '__main__':
     app = ClientApp()

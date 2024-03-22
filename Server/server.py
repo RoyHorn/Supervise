@@ -16,10 +16,10 @@ class Server():
         self.block = Block()
         self.web_blocker = WebBlocker()
         self.database = Database()
+        self.database.create_time_limit_table()
         self.two_factor_auth = TwoFactorAuthentication()
         self.active_time = ActiveTime()
         self.active_time.start()
-        self.database.create_time_limit_table()
         self.time_limit = self.database.get_time_limit()
         self.client_sockets = [] #contains all socket
         self.socket_to_publickey = {}
@@ -27,7 +27,6 @@ class Server():
         self.rlist = []
         self.wlist = []
         self.xlist = []
-        self.BUFF_SIZE = 1024
 
     def send_messages(self):
         '''responsible for sending messages to the corrects clients'''
@@ -48,7 +47,7 @@ class Server():
             self.block.start()
         elif cmmd == '2': # end computer block
             self.messages.append(('u', 2, '', self.client_sockets.copy()))
-            self.block.end_block_func()
+            self.block.end_block()
             self.block = Block()
         elif cmmd == '3': # take screenshot
             image = Screenshot().screenshot()
@@ -85,10 +84,12 @@ class Server():
 
     def handle_authorization(self, code, client):
         if self.two_factor_auth.verify_code(int(code)):
+            # in case the user entered the correct code
             self.messages.append(('a', 2, 'T', [client]))
             client_ip, _ = client.getpeername()
             self.database.insert_user(client_ip)
         else:
+            # in case the user got rejected
             self.messages.append(('a', 2, 'F', [client]))
             self.client_sockets.remove(client)
 
@@ -98,12 +99,10 @@ class Server():
         while True:
             time_now = datetime.datetime.now().time()
             if time_now.minute % 1 == 0:
-                today_date = datetime.datetime.now().strftime("%Y-%m-%d")
-                time_active = self.active_time.get_active_time()
-                self.database.log_screentime(today_date, time_active)
+                self.active_time.log_active_time()
                 self.web_blocker.update_file()
             if not self.database.is_last_log_today():
-                # means a day has passed and the server has reopened
+                # means a day had passed and the server has reopened
                 self.active_time.reset_active_time()
                 self.messages.append(('u', 2, '', self.client_sockets.copy()))
             if self.active_time.get_active_time() >= float(self.time_limit):
@@ -121,9 +120,8 @@ class Server():
 
         return ciphertext
 
-    def serve(self):
+    def start(self):
         '''starts the server, responsible for handling current users and adding new ones'''
-        #TODO add daily check for screentime, blocks and more...
         threading.Thread(target=self.update_handler).start()
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
@@ -171,4 +169,4 @@ class Server():
             self.send_messages()                       
 
 a = Server('0.0.0.0', 8008)
-a.serve()
+a.start()

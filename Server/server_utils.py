@@ -28,7 +28,7 @@ class ActiveTime(Thread):
         super().__init__()
         self.total_time_active = Database().get_today_active_time()*3600
         self.is_active = False
-        self.state_change_delay = 1
+        self.STATE_CHANGE_DELAY = 1
 
     def update_is_active(self):
         '''updates the is_active argument of the class according to the active state of the computer, updates every ten second'''
@@ -40,7 +40,7 @@ class ActiveTime(Thread):
             if GetLastInputInfo() == last_input:
                 #will run if user is not active
                 not_active_delta = time.time()-last_active
-                if not_active_delta > self.state_change_delay:
+                if not_active_delta > self.STATE_CHANGE_DELAY:
                     self.is_active = False
             else:
                 #will run if user is active
@@ -65,6 +65,10 @@ class ActiveTime(Thread):
 
         is_active_thread.join()
         count_time_thread.join()
+
+    def log_active_time(self):
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        Database().log_screentime(today_date, self.get_active_time())
 
     def reset_active_time(self):
         '''log last day and resets the active timer, will run every day change (every day at 00:00)'''
@@ -152,21 +156,6 @@ class Database:
 
         conn.commit()
         conn.close()
-
-    def check_log(self, date):
-        '''checks if there was a log in the last day'''
-        self.create_user_table()
-        conn, cursor = self.connect_to_db()
-        cursor.execute(f'''
-            SELECT * FROM screentime
-            WHERE date=(?);
-        ''', (date,))
-        user_exists = cursor.fetchone() is not None 
-
-        conn.commit()
-        conn.close()
-
-        return user_exists
     
     def get_last_week_data(self):
         self.create_screentime_table()
@@ -201,11 +190,9 @@ class Database:
                 result = cursor.fetchone()
 
                 if result:
-                    return result[0]  # Returning the active time for today
+                    return result[0]
                 else:
-                    return 0  # If no entry for today, return 0 as default
-            except sqlite3.Error as e:
-                return 0
+                    return 0
             finally:
                 conn.close()
     
@@ -300,18 +287,13 @@ class Block(Thread):
         self.setup_window()
         self.enable_keyboard() 
 
-    def end_block_func(self):
+    def end_block(self):
         '''responsible for ending the block when requested by the client'''
-        #TODO add thread killer in order to be able to re run the thread later
         with self.block_lock:
             self.end_block_flag = True
             self.block_state = False
 
     def setup_window(self):
-        def close():
-            self.root.destroy()
-            self.enable_keyboard()
-
         '''tkinter block window setup'''
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', True)
@@ -416,8 +398,7 @@ class Encryption():
         return type, cmmd, msg
     
     def get_public_key(self):
-        pem_key = self.public_key.export_key()
-        return pem_key
+        return self.public_key.export_key()
     
     def recv_public_key(self, pem_key):
         return RSA.import_key(pem_key)
@@ -425,12 +406,9 @@ class Encryption():
 class TwoFactorAuthentication(Thread):
     def __init__(self):
         super().__init__()
-        self.secret = pyotp.random_base32()
-        self.totp = pyotp.TOTP(self.secret)
-        self.show = False
-
-    def get_time_remaining(self):
-        return self.totp.interval - datetime.now().timestamp() % self.totp.interval
+        self.secret = pyotp.random_base32() # Generate a random base32 secret key
+        self.totp = pyotp.TOTP(self.secret) # Create a TOTP (Time-based One-Time Password) object using the secret key
+        self.show = False # Variable to control whether to show the TOTP
 
     def generate_authenication_code(self):
         return self.totp.now()
@@ -438,7 +416,7 @@ class TwoFactorAuthentication(Thread):
     def verify_code(self, input_code):
         return self.totp.verify(input_code)
 
-    def display_window(self):
+    def create_code_display(self):
         self.show = True
         window = tk.Tk()
         window.title('Code Screen')
@@ -464,7 +442,7 @@ class TwoFactorAuthentication(Thread):
 
     def display_code(self):
         if not self.show:
-            window_thread = threading.Thread(target=self.display_window)
+            window_thread = threading.Thread(target=self.create_code_display)
             window_thread.start()
 
     def stop_code_display(self):
@@ -477,7 +455,6 @@ class WebBlocker:
         self.path = self.get_hosts_file_location()
         self.redirect = '127.0.0.1'
         self.blocked_sites = self.get_sites()
-        self.output_file = 'browsing_history.txt'
 
     def get_hosts_file_location(self):
         system = platform.system()
