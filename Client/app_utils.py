@@ -27,7 +27,8 @@ class Client(Thread):
         self.auth_needed = -1 
         self.auth_succeded = -1
         self.screentime_limit = -1
-        self.block_button = ''
+        self.connection_succesful = -1
+        self.block_button = None
 
 
     def send_receive_messages(self):
@@ -59,6 +60,7 @@ class Client(Thread):
         #TODO: add recv all function
 
         type, cmmd, data = self.encryption.decrypt(ciphertext)
+
 
         if type == 'a':
             self.handle_authorization(cmmd, data)
@@ -179,22 +181,21 @@ class Client(Thread):
         self.client_socket.sendall(cipher)
         self.client_socket.close()
 
-    def open(self):
+    def run(self):
         """
         Opens the client socket connection.
         """
-
-        self.client_socket.connect((self.host, self.port))
+        try:
+            self.client_socket.connect((self.host, self.port))
+            self.connection_succesful = 1
+        except:
+            self.connection_succesful = 0
+            return
         self.client_socket.send(self.encryption.get_public_key())
         self.server_public_key = self.encryption.recv_public_key(self.client_socket.recv(271))
 
         while True:
             self.send_receive_messages()
-
-    def run(self):
-        '''the thread start method'''
-        client_thread = threading.Thread(target=self.open)
-        client_thread.start()
 
 class Encryption():
     def __init__(self):

@@ -6,6 +6,7 @@ from tkinter import messagebox as mb
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from app_utils import Client
 import os
+import configparser
 
 palette = {
     'background_color': '#1A1A1A',
@@ -20,7 +21,39 @@ class ClientApp:
         self.client = None
 
     def run(self):
-        self.login_screen()
+        """Runs the client app.
+            
+            checks if the user selected to reconnect automatically to the last connected server, if so, it will try to connect to the last connected server.
+            else, it will show the login screen.
+        """
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+
+        if config.getboolean('connection', 'reconnect_automatically'):
+            self.ip = config.get('connection', 'last_connected_ip')
+            self.login_protocol()
+        else:
+            self.login_screen()
+
+    def login_protocol(self):
+        """Handles the login protocol for the client.
+        
+            checks wether the connection was successful and if the client needs to be authorized and acts acordingly.
+        """
+        self.client = Client(self.ip, 8008)
+        self.client.start()
+
+        while self.client.auth_needed == -1 and self.client.connection_succesful == -1:
+            pass
+        else:
+            if self.client.connection_succesful == 0:
+                self.login_screen()
+                self.client = ''
+                return
+            if self.client.auth_needed == 1:
+                self.create_2fa_window()
+            else:
+                self.parental_control()
 
     def login_screen(self):
         """Displays the login screen GUI and handles user login.
@@ -34,18 +67,28 @@ class ClientApp:
             ip_regex = r'\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b'
             if re.match(ip_regex, self.ip):
                 login.destroy()
-                self.client = Client(self.ip, 8008)
-                self.client.start()
 
-                while self.client.auth_needed == -1:
-                    pass
-                else:
-                    if self.client.auth_needed:
-                        self.create_2fa_window()
-                    else:
-                        self.parental_control()
+                #Write to the file the last connected ip
+                config = configparser.ConfigParser()
+                config.read('config.ini')
+                config.set('connection', 'last_connected_ip', self.ip)
+                with open('config.ini', 'w') as configfile:
+                    config.write(configfile)
+
+                self.login_protocol()
             else:
                 mb.showerror(title="IP Error", message="Check your ip address and try again")
+
+        def on_checkbox_toggle():
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+
+            if reconnect_checkbox_var.get():
+                config.set('connection','reconnect_automatically', 'True')
+            else:
+                config.set('connection','reconnect_automatically', 'False')
+            with open('config.ini', 'w') as configfile:
+                config.write(configfile)
 
         login = tk.Tk()
         login.title("Log In")
@@ -63,6 +106,14 @@ class ClientApp:
             login,
             width=30
         )
+        reconnect_checkbox_var = tk.BooleanVar()
+        reconnect_checkbox = tk.Checkbutton(login,
+                                            text="Reconnect Automatically",
+                                            variable=reconnect_checkbox_var,
+                                            command=on_checkbox_toggle,
+                                            background=palette['background_color'],
+                                            foreground=palette['text_color'],
+                                            selectcolor=palette['blue_bg'])
         login_button = tk.Button(
             login,
             text='login',
@@ -83,6 +134,7 @@ class ClientApp:
 
         ip_label.place(relx=0.5, rely=0.35, anchor='center')
         ip_entry.place(relx=0.5, rely=0.43, anchor='center')
+        reconnect_checkbox.place(relx=0.5, rely=0.48, anchor='center')
         login_button.place(relx=0.5, rely=0.55, anchor='center')
         logo.place(relx=0.5, rely=0.9, anchor='center')
 
