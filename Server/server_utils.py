@@ -22,7 +22,6 @@ palette = {
 }
 
 class ActiveTime(Thread):
-    #TODO stop timer when block starts and resume when ends
     '''Responsible for counting active time on the computer'''
     def __init__(self):
         super().__init__()
@@ -31,7 +30,11 @@ class ActiveTime(Thread):
         self.STATE_CHANGE_DELAY = 1
 
     def update_is_active(self):
-        '''updates the is_active argument of the class according to the active state of the computer, updates every ten second'''
+        """
+        Updates the `is_active` attribute of the `ActiveTime` class based on the user's activity on the computer. This method runs in a separate thread and checks the user's activity every second, updating the `is_active` attribute accordingly.
+        
+        If the user is not active for more than `self.STATE_CHANGE_DELAY` seconds, the `is_active` attribute is set to `False`. If the user becomes active again, the `is_active` attribute is set to `True`.
+        """
         last_input = GetLastInputInfo()
         last_active = time.time()
 
@@ -49,14 +52,26 @@ class ActiveTime(Thread):
                 self.is_active = True
 
     def count_active_time(self):
-        '''counts the active usage time of the machine, updates every second'''
+        """
+        Counts the active usage time of the machine, updating the total active time every second while the user is active.
+        
+        This method is called in a separate thread by the `ActiveTime` class to continuously monitor the user's activity and update the `total_time_active` attribute accordingly. If the user is active, the `total_time_active` is incremented by 1 second every second. If the user is inactive for more than `self.STATE_CHANGE_DELAY` seconds, the `is_active` attribute is set to `False`.
+        """
         while True:
             if self.is_active:
                 time.sleep(1)
                 self.total_time_active += 1
 
     def run(self):
-        '''runs two threads - one for changing the flag according to activity, the other for active time counting'''
+        """
+        Runs two threads - one for changing the `is_active` flag according to user activity, and the other for counting the active time.
+        
+        The `update_is_active` thread continuously monitors the user's activity and updates the `is_active` attribute accordingly. If the user is inactive for more than `self.STATE_CHANGE_DELAY` seconds, the `is_active` attribute is set to `False`. If the user becomes active again, the `is_active` attribute is set to `True`.
+        
+        The `count_active_time` thread continuously increments the `total_time_active` attribute by 1 second every second while the user is active (i.e., `is_active` is `True`).
+        
+        Both threads are started and joined in this method to ensure they run concurrently.
+        """
         is_active_thread = Thread(target=self.update_is_active)
         count_time_thread = Thread(target=self.count_active_time)
 
@@ -67,33 +82,59 @@ class ActiveTime(Thread):
         count_time_thread.join()
 
     def log_active_time(self):
+        """
+        Logs the active time for the current day to the database.
+        
+        This method is called to record the total active time for the current day in the database. It retrieves the current date, calls the `get_active_time()` method to get the total active time, and then logs this information to the database using the `log_screentime()` method of the `Database` class.
+        """
         today_date = datetime.now().strftime("%Y-%m-%d")
         Database().log_screentime(today_date, self.get_active_time())
 
     def reset_active_time(self):
-        '''log last day and resets the active timer, will run every day change (every day at 00:00)'''
+        """
+        Resets the active time counter and logs the total active time for the previous day to the database.
+        
+        This method is called daily at midnight (00:00) to reset the `total_time_active` attribute to 0 and log the total active time for the previous day to the database using the `log_screentime()` method of the `Database` class.
+        """
         Database().log_screentime(datetime.now().strftime("%Y-%m-%d"),0)
         self.total_time_active = 0
 
-    def get_active_time(self):
-        '''returns the active time'''
+    def get_active_time(self) -> float:
+        """
+        Returns the total active time in hours.
+        
+        This method calculates and returns the total active time in hours by dividing the `total_time_active` attribute by 3600 (the number of seconds in an hour).
+        """
         return float(self.total_time_active/3600)
-    
-    def __str__(self):
-        '''prints the current active time and active state'''
+        
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the object.
+        """
         return f'active time: {self.total_time_active} - is active: {self.is_active}'
 
 class Database:
     def __init__(self):
         self.database = 'supervise_db.sqlite'
 
-    def connect_to_db(self):
-        '''creates connection to the database'''
+    def connect_to_db(self) -> tuple:
+        """
+        Connects to the SQLite database specified in the `database` attribute.
+        
+        This method is used to establish a connection to the SQLite database that is used to store the user's active time data. It is an internal implementation detail of the `Database` class and is not intended to be called directly by external code.
+
+        Returns:
+            (conn, conn.cursor()) (Tuple): A tuple containing the connection object and the cursor object.
+        """
         conn = sqlite3.connect(self.database)
         return (conn ,conn.cursor())
     
     def create_user_table(self):
-        '''creates the user table'''
+        """
+        Creates a table named "users" in the SQLite database if it doesn't already exist. The table has a single column named "ip" which is used as the primary key and is required to not be null.
+        
+        This method is an internal implementation detail of the `Database` class and is not intended to be called directly by external code.
+        """
         conn, cursor = self.connect_to_db()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -103,8 +144,15 @@ class Database:
         conn.commit()
         conn.close()
 
-    def insert_user(self, ip):
-        '''inserts a new user to the users table'''
+    def insert_user(self, ip: str):
+        """
+        Inserts a new user into the users table in the SQLite database.
+        
+        This method checks if the given IP address already exists in the users table. If it does not, it creates the users table if it doesn't already exist, and then inserts a new row with the provided IP address.
+        
+        Args:
+            ip (str): The IP address of the new user to be inserted.
+        """
         if self.check_user(ip):
             return
         self.create_user_table()
@@ -115,7 +163,18 @@ class Database:
         conn.commit()
         conn.close()
 
-    def check_user(self, ip):
+    def check_user(self, ip: str) -> bool:
+        """
+        Checks if a user with the given IP address exists in the users table of the SQLite database.
+        
+        It is used to determine if a user with the given IP address already exists in the database.
+
+        Args:
+            ip (str): The IP address of the user to check.
+        
+        Returns:
+            user_exists (Boolean): True if the user with the given IP address exists in the database, False otherwise.
+        """
         '''checks if a certain user is in the users table'''
         self.create_user_table()
         conn, cursor = self.connect_to_db()
@@ -131,7 +190,15 @@ class Database:
         return user_exists
 
     def create_screentime_table(self):
-        '''creates screentime table if not exists'''
+        """
+        Creates a table named "screentime" in the SQLite database if it doesn't already exist. The table has two columns:
+        
+        - "date": A primary key column of type DATE that stores the date.
+        - "active_time": A REAL column that stores the active time for the given date.
+        
+        This method is used to ensure the existence of the screentime table in the database, which is used to store user activity data.
+        """
+
         conn, cursor = self.connect_to_db()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS screentime (
@@ -142,7 +209,16 @@ class Database:
         conn.commit()
         conn.close()
 
-    def log_screentime(self, date, active_time):
+    def log_screentime(self, date: datetime.date, active_time: float):
+        """
+        Logs the active time for a given date in the "screentime" table of the SQLite database.
+        
+        If a record for the given date already exists, it will be updated with the new active_time value. If the record does not exist, a new one will be inserted.
+        
+        Args:
+            date (datetime.date): The date for which to log the active time.
+            active_time (float): The active time in seconds for the given date.
+        """
         self.create_screentime_table()
         
         conn, cursor = self.connect_to_db()
@@ -157,7 +233,16 @@ class Database:
         conn.commit()
         conn.close()
     
-    def get_last_week_data(self):
+    def get_last_week_data(self) -> list[tuple]:
+        """
+        Retrieves the screentime data for the last 7 days from the SQLite database.
+        
+        This method creates the "screentime" table if it doesn't already exist, and then executes a SQL query to fetch all records where the date is in the last 7 days.
+        The result is returned as a list of tuples, where each tuple represents a row in the "screentime" table.
+        
+        Returns:
+            result (list): A list of tuples, where each tuple represents a row in the "screentime" table for the last 7 days.
+        """
         self.create_screentime_table()
         seven_days_ago = datetime.now()-timedelta(days=7)
         seven_days_ago.strftime("%Y-%m-%d")
@@ -177,8 +262,17 @@ class Database:
 
         return result
     
-    def get_today_active_time(self):
-            '''returns the total active time for today'''
+    def get_today_active_time(self) -> float:
+            """
+            Returns the total active time for today.
+            
+            This method creates the "screentime" table if it doesn't already exist,
+            and then executes a SQL query to fetch the active_time value for the current date.
+            If a record exists, the active_time value is returned. If no record exists, 0 is returned.
+            
+            Returns:
+                result (float): The total active time for today in seconds.
+            """
             self.create_screentime_table()
             conn, cursor = self.connect_to_db()
 
@@ -196,8 +290,15 @@ class Database:
             finally:
                 conn.close()
     
-    def is_last_log_today(self):
-        '''returns True if the last log entry is today, False otherwise'''
+    def is_last_log_today(self) -> bool:
+        """
+        Returns True if the last log entry is today, False otherwise.
+        
+        This method creates the "screentime" table if it doesn't already exist, and then
+        executes a SQL query to fetch the maximum date from the "screentime" table.
+        If the last log date is not None, it checks if the last log date is the same as
+        the current date. If so, it returns True, otherwise it returns False.
+        """
         self.create_screentime_table()
         conn, cursor = self.connect_to_db()
 
@@ -221,7 +322,13 @@ class Database:
             conn.close()
 
     def create_time_limit_table(self):
-        '''creates the time limit table'''
+        """
+        Creates the "timelimit" table in the database if it doesn't already exist.
+        
+        This method establishes a connection to the database, checks if the "timelimit" table
+        exists, and if not, creates the table with a single column "lim" of type REAL.
+        The changes are then committed to the database and the connection is closed.
+        """
         conn, cursor = self.connect_to_db()
 
         # Create the timelimit table if it doesn't exist
@@ -235,7 +342,10 @@ class Database:
         conn.commit()
         conn.close()
 
-    def get_time_limit(self):
+    def get_time_limit(self) -> float:
+        """
+        Returns the time limit value from the "timelimit" table in the database.
+        """
         self.create_screentime_table()
         conn, cursor = self.connect_to_db()
 
@@ -251,8 +361,19 @@ class Database:
         conn.close()
         return time_limit
 
-    def change_time_limit(self, new_limit):
-        '''changes the time limit in the timelimit table'''
+    def change_time_limit(self, new_limit: float):
+        """
+        Changes the time limit value in the "timelimit" table of the database.
+        
+        This method first checks if the "timelimit" table exists, and creates it if it doesn't.
+        It then checks if the table is empty, if it is, a new row is inserted with the new limit value.
+        If the table is not empty, the existing row is updated with the new limit value.
+        
+        The changes are then committed to the database and the connection is closed.
+        
+        Args:
+            new_limit (float): The new time limit value to be set.
+        """
         self.create_time_limit_table()
         conn, cursor = self.connect_to_db()
 
@@ -272,7 +393,23 @@ class Database:
         conn.close()
 
 class Block(Thread):
-    '''Responsible for blocking the computer when needed'''
+    """
+    Responsible for blocking the computer when needed. This class manages the state of the computer block, including setting up a full-screen window with a message informing the user that their time limit has been reached, and disabling/enabling the keyboard.
+    
+    The `Block` class is a subclass of `Thread`, which allows it to run in a separate thread from the main application. This ensures that the blocking functionality does not block the main application.
+    
+    The class has the following methods:
+    
+    - `__init__()`: Initializes the block state, end block flag, and a lock for thread-safe access.
+    - `run()`: Starts the block by disabling the keyboard, setting up the block window, and enabling the keyboard.
+    - `end_block()`: Ends the block by setting the end block flag and resetting the block state.
+    - `setup_window()`: Sets up the full-screen block window with a message and logo.
+    - `calculate_ms_delta()`: Calculates the number of milliseconds until the next day, so that the block can be automatically released.
+    - `disable_keyboard()`: Disables the keyboard by blocking all keys.
+    - `enable_keyboard()`: Enables the keyboard by unblocking all keys.
+    - `get_block_state()`: Returns the current block state.
+    """
+
     def __init__(self):
         super().__init__()
         self.block_state = False
@@ -280,7 +417,9 @@ class Block(Thread):
         self.block_lock = threading.Lock()
 
     def run(self):
-        '''starts the block'''
+        """
+        Starts the block by disabling the keyboard, and setting up the block window.
+        """
         self.end_block_flag = False
         self.block_state = True
         self.disable_keyboard()
@@ -288,13 +427,22 @@ class Block(Thread):
         self.enable_keyboard() 
 
     def end_block(self):
-        '''responsible for ending the block when requested by the client'''
+        """
+        Ends the block when requested by the client. This method sets the `end_block_flag` to `True` and the `block_state` to `False`, allowing the block to be released. 
+        The method uses a lock to ensure thread-safe access to the block state.
+        """
         with self.block_lock:
             self.end_block_flag = True
             self.block_state = False
 
     def setup_window(self):
-        '''tkinter block window setup'''
+        """
+        Sets up the full-screen block window with a message and logo. This method is responsible for creating the Tkinter window, setting its attributes, and placing the message and logo labels on the window. The window is kept on top of other windows and cannot be closed by the user.
+        
+        The window is set to automatically destroy itself after the calculated number of milliseconds until the next day, using the `self.calculate_ms_delta()` method.
+        
+        This method runs in a loop, updating the window until the `self.end_block_flag` is set to `True`, indicating that the block should be ended.
+        """
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', True)
         self.root.title("block")
@@ -339,38 +487,79 @@ class Block(Thread):
             self.root.update()
             self.root.update_idletasks()
 
-    def calculate_ms_delta(self):
-        '''calculates the ms delta until next day in order to automatically
-          release the block when next day arrives'''
+    def calculate_ms_delta(self) -> int:
+        """
+        Calculates the number of milliseconds until the next day, in order to automatically release the block when the next day arrives.
+        
+        Returns:
+            int: The number of milliseconds until the next day.
+        """
+
+        # Get the current time and date
         now = datetime.now()
         tomorrow = (now + dt.timedelta(1)).replace(hour=0, minute=0, second=0)
 
+        # Calculate the number of seconds until the next day
         delta = (tomorrow-now).seconds
         
         return delta*1000
 
     def disable_keyboard(self):
-        '''disables keyboard'''
+        """
+        Disables the keyboard by blocking all keys.
+        
+        This function iterates through the range of key codes (0-149) and blocks each key using the `keyboard.block_key()` function. This effectively disables the entire keyboard, preventing the user from interacting with the system.
+        """
         for i in range(150):
             keyboard.block_key(i)
         
     def enable_keyboard(self):
-        '''enables keyboard'''
+        """
+        Enables the keyboard by unblocking all keys that were previously blocked.
+        
+        This function iterates through the range of key codes (0-149) and unblocks each key using the `keyboard.unblock_key()` function. This effectively re-enables the entire keyboard, allowing the user to interact with the system.
+        """
         for i in range(150):
             keyboard.unblock_key(i)
 
-    def get_block_state(self):
+    def get_block_state(self) -> bool:
+        """
+        Returns the current block state.
+        """
         return self.block_state
 
 class Encryption():
+    """
+    The `Encryption` class provides a simple interface for encrypting and decrypting data using RSA encryption.
+    
+    The class generates a 1024-bit RSA key pair on initialization, and provides methods to encrypt and decrypt data using the public and private keys, respectively.
+    
+    The `encrypt()` method takes a key (either the public key or the private key) and some data, and returns the encrypted data.
+    The `decrypt()` method takes the encrypted ciphertext and returns the original plaintext message, along with the message type and command.
+    
+    The `get_public_key()` method returns the public key as a PEM-encoded string
+    The `recv_public_key()` method imports a public key from a PEM-encoded string.
+    """
     def __init__(self):
         self.key = RSA.generate(1024)
         self.public_key = self.key.publickey()
         self.private_key = self.key
 
-    def encrypt(self, key, data):
+    def encrypt(self, key, data: bytes) -> bytes:
+        """
+        Encrypts the given data using the provided RSA key.
+        
+        The data is encrypted in chunks of 86 bytes to avoid exceeding the maximum plaintext size for the RSA key. The encrypted chunks are then concatenated and returned as the final encrypted data.
+        
+        Args:
+            key (Crypto.PublicKey.RSA.RsaKey): The RSA key to use for encryption.
+            data (bytes): The data to be encrypted.
+        
+        Returns:
+            encrypted_data (bytes): The encrypted data.
+        """
         cipher = PKCS1_OAEP.new(key)
-        chunk_size = 86  # Adjust this value based on your key size
+        chunk_size = 86 
         encrypted_data = b""
 
         for i in range(0, len(data), chunk_size):
@@ -380,9 +569,25 @@ class Encryption():
 
         return encrypted_data
     
-    def decrypt(self, ciphertext):
+    def decrypt(self, ciphertext: bytes) -> tuple[str, str, str]:
+        """
+        Decrypts the provided ciphertext using the private RSA key.
+        
+        The ciphertext is decrypted in chunks of 128 bytes to avoid exceeding the maximum ciphertext size for the RSA key.
+        The decrypted chunks are then concatenated and returned as the final decrypted message.
+        
+        The decrypted message is then split into the message type, command, and message content.
+        
+        Args:
+            ciphertext (bytes): The encrypted ciphertext to be decrypted.
+        
+        Returns:
+            type (str): The type of the decrypted message.
+            cmmd (str): The command of the decrypted message.
+            msg (str): The content of the decrypted message.
+        """
         decrypt_cipher = PKCS1_OAEP.new(self.private_key)
-        chunk_size = 128  # Adjust this value based on your key size
+        chunk_size = 128
         decrypted_message = b""
 
         for i in range(0, len(ciphertext), chunk_size):
@@ -395,28 +600,75 @@ class Encryption():
         cmmd = decrypted_message[1:2]
         msg = decrypted_message[2:]
 
-        return type, cmmd, msg
+        return (type, cmmd, msg)
     
-    def get_public_key(self):
+    def get_public_key(self) -> bytes:
+        """
+        Returns the public RSA key as a byte string.
+        """
         return self.public_key.export_key()
     
-    def recv_public_key(self, pem_key):
+    def recv_public_key(self, pem_key: bytes):
+        """
+        Imports an RSA public key from a PEM-encoded string.
+        
+        Args:
+            pem_key (bytes): The PEM-encoded RSA public key.
+        
+        Returns:
+            RSA Key : The imported RSA public key object.
+        """
         return RSA.import_key(pem_key)
 
 class TwoFactorAuthentication(Thread):
+    """
+    Implements a two-factor authentication (2FA) system using a Time-based One-Time Password (TOTP) algorithm.
+    
+    The `TwoFactorAuthentication` class generates a random secret key and uses it to create a TOTP object.
+    It provides methods to generate and verify 2FA codes, as well as to display the current 2FA code in a Tkinter window.
+    
+    The `generate_authenication_code()` method generates the current 2FA code based on the secret key and the current time.
+    The `verify_code()` method verifies a provided 2FA code against the current code generated by the TOTP object.
+    The `create_code_display()` method creates a Tkinter window that continuously displays the current 2FA code.
+    The `display_code()` method starts the 2FA code display window in a separate thread.
+    The `stop_code_display()` method stops the 2FA code display window.
+    """
     def __init__(self):
         super().__init__()
         self.secret = pyotp.random_base32() # Generate a random base32 secret key
         self.totp = pyotp.TOTP(self.secret) # Create a TOTP (Time-based One-Time Password) object using the secret key
         self.show = False # Variable to control whether to show the TOTP
 
-    def generate_authenication_code(self):
+    def generate_authenication_code(self) -> str:
+        """
+        Generates the current Time-based One-Time Password (TOTP) code based on the secret key.
+        
+        Returns:
+            str: The current TOTP code.
+        """
         return self.totp.now()
 
-    def verify_code(self, input_code):
+    def verify_code(self, input_code: str) -> bool:
+        """
+        Verifies the provided Time-based One-Time Password (TOTP) code against the current TOTP code generated by the TOTP object.
+        
+        Args:
+            input_code (str): The TOTP code to be verified.
+        
+        Returns:
+            bool: True if the provided code matches the current TOTP code, False otherwise.
+        """
         return self.totp.verify(input_code)
 
     def create_code_display(self):
+        """
+        Creates a Tkinter window that continuously displays the current Time-based One-Time Password (TOTP) code.
+        
+        The `create_code_display()` method creates a Tkinter window with a label that displays the current TOTP code.
+        The window is set to be always on top, and the window's close button is configured to call the `stop_code_display()` method to stop the code display.
+        
+        The method enters a loop that updates the code label with the current TOTP code generated by the `generate_authenication_code()` method. The loop continues as long as the `show` flag is set to `True`.
+        """
         self.show = True
         window = tk.Tk()
         window.title('Code Screen')
@@ -441,22 +693,56 @@ class TwoFactorAuthentication(Thread):
             window.update_idletasks()
 
     def display_code(self):
+        """
+        Displays the current Time-based One-Time Password (TOTP) code in a Tkinter window.
+        """
         if not self.show:
             window_thread = threading.Thread(target=self.create_code_display)
             window_thread.start()
 
     def stop_code_display(self):
+        """
+        Stops the continuous display of the current Time-based One-Time Password (TOTP) code in the Tkinter window.
+        
+        This method sets the `show` flag to `False`, which causes the loop in the `create_code_display()` method to exit, effectively stopping the code display.
+        """
         if self.show:
             self.show = False #stops the current instance of window
 
 class WebBlocker:
-    '''responsible for blocking access to specific web pages using os hosts files'''
+    """
+    The `WebBlocker` class provides functionality to manage a hosts file for blocking websites.
+    
+    The class has the following methods:
+    
+    - `get_hosts_file_location()`: Returns the location of the hosts file based on the operating system.
+    - `get_sites()`: Reads the hosts file and extracts the list of blocked websites.
+    - `update_file()`: Updates the hosts file with the current list of blocked websites.
+    - `add_website(domain)`: Adds a new website to the block list and updates the hosts file.
+    - `remove_website(domain)`: Removes a website from the block list and updates the hosts file.
+    - `extract_history(history_db)`: Extracts the browsing history from the Chrome browser's history database.
+    - `build_history_string()`: Builds a dictionary of the browsing history.
+    """
+    
     def __init__(self):
         self.path = self.get_hosts_file_location()
         self.redirect = '127.0.0.1'
         self.blocked_sites = self.get_sites()
 
-    def get_hosts_file_location(self):
+    def get_hosts_file_location(self) -> str:
+        """
+        Returns the location of the hosts file based on the operating system.
+        
+        This method checks the current operating system and returns the appropriate file path for the hosts file.
+        It supports Windows, Linux, and macOS (Darwin) operating systems.
+        If the operating system is not supported, it raises an OSError exception.
+        
+        Returns:
+            str: The file path of the hosts file.
+        
+        Raises:
+            OSError: If the operating system is not supported.
+        """
         system = platform.system()
         if system == "Windows":
             return r'C:\Windows\System32\drivers\etc\hosts'
@@ -465,8 +751,15 @@ class WebBlocker:
         else:
             raise OSError("Unsupported operating system")
 
-    def get_sites(self):
-        '''gets the sites list from the hosts os file'''
+    def get_sites(self) -> list:
+        """
+        Gets the list of blocked websites from the hosts file.
+        
+        This method reads the contents of the hosts file and extracts the URLs of the blocked websites. It returns a list of these URLs.
+        
+        Returns:
+            list: A list of blocked website URLs.
+        """
         with open(self.path,'r') as f:
             raw_data = f.read()
 
@@ -481,23 +774,58 @@ class WebBlocker:
         return []
 
     def update_file(self):
-        '''responsible for updating the hosts file after every change'''
+        """
+        Updates the hosts file by writing the blocked websites and their redirect address to the file.
+        
+        This method iterates through the list of blocked websites stored in `self.blocked_sites` and writes each one to the hosts file, prefixed with the redirect address `self.redirect`.
+        This effectively blocks access to the listed websites by redirecting them to the specified address.
+        """
+        
         f = open(self.path, 'w')
         for domain in self.blocked_sites:
             f.write(f'\n{self.redirect}  {domain}    #added using Supervise.')
         f.close()
 
-    def add_website(self, domain):
-        '''responsible for adding pages to the block list'''
+    def add_website(self, domain: str):
+        """
+        Adds a website to the block list and updates the hosts file to reflect the change.
+        
+        Args:
+            domain (str): The domain of the website to be added to the block list.
+        
+        This method appends the provided domain to the `self.blocked_sites` list, and then calls the `update_file()` method to write the updated block list to the hosts file.
+        """
+
         self.blocked_sites.append(domain)
         self.update_file()
 
-    def remove_website(self, domain):
-        '''responsible for removing sites from the block site'''
-        self.blocked_sites.remove(domain)
-        self.update_file()
+    def remove_website(self, domain: str):
+        """
+        Removes a website from the block list and updates the hosts file to reflect the change.
+        
+        Args:
+            domain (str): The domain of the website to be removed from the block list.
+        
+        This method removes the provided domain from the `self.blocked_sites` list, and then calls the `update_file()` method to write the updated block list to the hosts file.
+        """
+        
+        if domain in self.blocked_sites:
+            self.blocked_sites.remove(domain)
+            self.update_file()
 
-    def extract_history(self, history_db):
+    def extract_history(self, history_db: str) -> list[tuple]:
+        """
+        Extracts the browsing history from the Chrome browser's SQLite database and returns a list of tuples containing the URL, title, and last visited date/time for the 20 most recent visits.
+        
+        This function first closes the Chrome browser to gain access to the database file, then connects to the SQLite database and executes a SQL query to retrieve the desired history data.
+        The results are then returned as a list of tuples.
+        
+        Args:
+            history_db (str): The file path to the Chrome browser's SQLite history database.
+        
+        Returns:
+            list of tuples: A list of tuples containing the URL, title, and last visited date/time for the 20 most recent visits.
+        """
         # Close chrome in order to access its database
         os.system("taskkill /f /im chrome.exe")
 
@@ -521,11 +849,20 @@ class WebBlocker:
         results = cursor.fetchall()
         c.close()
 
+        # Open chrome again
         os.system("start \"\" https://www.google.com")
         
         return results
         
-    def build_history_string(self):
+    def build_history_string(self) -> dict[str, str]:
+        """
+        Builds a dictionary of the user's browsing history, where the keys are the last visited date and time concatenated with the page title, and the values are the corresponding URLs.
+        
+        This method first retrieves the Chrome browser's SQLite history database file path, then calls the `extract_history()` method to extract the 20 most recent browsing history entries. The resulting list of tuples is then used to construct the `browsing_history` dictionary, where the key is a string containing the last visited date and time, and the title, and the value is the corresponding URL.
+        
+        Returns:
+            browsing_histoyry (dict[str, str]): A dictionary of the user's browsing history, where the keys are the last visited date and time concatenated with the page title, and the values are the corresponding URLs.
+        """
         # Get the user directory dynamically
         user_dir = os.path.expanduser("~")
         history_db = os.path.join(user_dir, 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'History')
@@ -539,8 +876,13 @@ class WebBlocker:
         return browsing_history
 
 class Screenshot:
-    '''responsible for taking screenshot and translating to bytes'''
-    def screenshot(self):
+    def screenshot(self) -> bytes:
+        """
+        Takes a screenshot, compresses it using gzip, and returns the compressed bytes.
+        
+        Returns:
+            bytes: The compressed screenshot data.
+        """
         pic = ImageGrab.grab()
         pic_bytes = pic.tobytes()
         compressed_pic = gzip.compress(pic_bytes)
