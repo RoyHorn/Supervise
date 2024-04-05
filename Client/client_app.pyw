@@ -29,7 +29,7 @@ class ClientApp:
         config = configparser.ConfigParser()
         config.read('config.ini')
 
-        if config.getboolean('connection', 'reconnect_automatically'):
+        if config.getboolean('connection', 'reconnect_automatically'): # If the user selected to reconnect automatically to the last connected server
             self.ip = config.get('connection', 'last_connected_ip')
             self.login_protocol()
         else:
@@ -43,14 +43,14 @@ class ClientApp:
         self.client = Client(self.ip, 8008)
         self.client.start()
 
-        while self.client.auth_needed == -1 and self.client.connection_succesful == -1:
-            pass
-        else:
-            if self.client.connection_succesful == 0:
+        while self.client.auth_needed == -1 or self.client.connection_succesful == -1: # Wait for the server to respond
+            if self.client.connection_succesful == 0: # If the connection was unsuccesful
+                mb.showerror(title="Connection unsuccesful", message="Make sure that your kids computer is turned on and try again")
                 self.login_screen()
                 self.client = ''
                 return
-            if self.client.auth_needed == 1:
+        else:
+            if self.client.auth_needed == 1: # If the client needs to be authorized
                 self.create_2fa_window()
             else:
                 self.parental_control()
@@ -68,7 +68,7 @@ class ClientApp:
             if re.match(ip_regex, self.ip):
                 login.destroy()
 
-                #Write to the file the last connected ip
+                # Write the last connected ip to the file
                 config = configparser.ConfigParser()
                 config.read('config.ini')
                 config.set('connection', 'last_connected_ip', self.ip)
@@ -83,12 +83,12 @@ class ClientApp:
             config = configparser.ConfigParser()
             config.read('config.ini')
 
-            if reconnect_checkbox_var.get():
-                config.set('connection','reconnect_automatically', 'True')
+            if reconnect_checkbox_var.get(): # If the reconnect checkbox is checked
+                config.set('connection','reconnect_automatically', 'True') # Set the reconnect automatically field in the config file to true
             else:
-                config.set('connection','reconnect_automatically', 'False')
+                config.set('connection','reconnect_automatically', 'False') # Set the reconnect automatically field in the config file to false
             with open('config.ini', 'w') as configfile:
-                config.write(configfile)
+                config.write(configfile) # Write the changes to the config file
 
         login = tk.Tk()
         login.title("Log In")
@@ -146,17 +146,29 @@ class ClientApp:
         This shows the parental control UI and handles related logic.
         """
 
-        def on_window_close(): #TODO make it work
+        def on_window_close():
             parental.destroy()
             self.client.close_client()
 
         def on_block_button_click():
+            """
+            Handles the click event for the block button in the parental control interface.
+            
+            If the button text is "Start Block", it sends a request to the client to request data with the value 1 (Meaning start block).
+            Otherwise, it sends a request to the client to request data with the value 2 (Meaning end block).
+            """
             if block_button['text'] == "Start Block":
                 self.client.request_data(1)
             else:
                 self.client.request_data(2)
 
         def on_switch_button_click():
+            """
+            Handles the switching from the one computer to another.
+            
+            This function destroys the parental control window and resets the client object,
+            then calls the login_screen method to display the login interface.
+            """
             parental.destroy()
             self.client = ''
             self.login_screen()
@@ -251,14 +263,14 @@ class ClientApp:
         def submit_code():
             entered_code = str(code_entry.get())
             if entered_code:
-                self.client.request_data(1 ,data=entered_code ,type='a')
+                self.client.request_data(1 ,data=entered_code ,type='a') # Sends the entered to the server for check
                 root.destroy()
-                while self.client.auth_succeded == -1:
+                while self.client.auth_succeded == -1: # Wait for the server to respond
                     pass
                 else:
-                    if self.client.auth_succeded == 1:
+                    if self.client.auth_succeded == 1: # If the code is correct
                         self.parental_control()
-                    else:
+                    else: # If the code is incorrect
                         mb.showerror("Error", "Invalid code, try again.")
                         self.login_screen()
                         self.client.close_client()
@@ -297,6 +309,12 @@ class ClientApp:
         """
 
         def on_button_click():
+            """
+            Toggles the state of the daily limit entry field and updates the button text accordingly.
+            If the entry field is disabled, it is enabled and the button text is set to "Set".
+            If the entry field is enabled, it is disabled and the button text is set to "Change".
+            The current value of the entry field is then inserted into the field and the client is notified of the new daily limit.
+            """
             if daily_limit_entry['state'] == 'disabled':
                 daily_limit_entry['state'] = 'normal'
                 daily_limit_button['text'] = 'Set'
@@ -307,7 +325,16 @@ class ClientApp:
                 self.client.request_data(9, daily_limit_entry.get())
                 update_limitline(float(daily_limit_entry.get()))  # Update the y-data of the limit line
 
-        def update_date(screentime_data, time_limit):
+        def update_data(screentime_data: list, time_limit: str):
+            """
+            Updates the data visualization for the screentime data.
+            
+            Parameters:
+                screentime_data (list): A list of tuples containing the date and screen time data.
+                time_limit (str): The daily screen time limit set by the user.
+            
+            This function creates a DataFrame from the provided screentime data, formats the date column, and plots a bar graph of the screen time data. It also adds a weekly average line and a daily limit line to the plot. The updated plot is then drawn on the canvas.
+            """
             # Create a DataFrame from the data
             df = pd.DataFrame(screentime_data, columns=['Date', 'Time'])
             # Convert the 'Date' column to datetime format
@@ -370,18 +397,18 @@ class ClientApp:
             screentime.update()
             screentime.update_idletasks()
 
-            if self.client.get_screentime_limit() != -1 and self.client.get_screentime_list() != -1:
+            if self.client.get_screentime_limit() != -1 and self.client.get_screentime_list() != -1: # If the data was recived 
                 screentime_data = self.client.get_screentime_list()
                 time_limit = self.client.get_screentime_limit()
 
-                update_date(screentime_data, time_limit)
+                update_data(screentime_data, time_limit)
 
                 daily_limit_entry.config(state='normal')
                 daily_limit_entry.insert(0, time_limit)
                 daily_limit_entry.config(state='disabled')
 
-                self.client.screentime_list = -1
-                self.client.screentime_limit = -1
+                self.client.screentime_list = -1 # Reset the data for the next time
+                self.client.screentime_limit = -1 # Reset the data for the next time
     
     def web_blocker(self,parental):
         '''web_blocker: Displays the web blocking GUI to allow parents to block websites.
@@ -398,17 +425,17 @@ class ClientApp:
             if website:  # Ensure the entry isn't empty
                 website_listbox.insert(tk.END, website)
                 website_entry.delete(0, tk.END)  # Clear the entry after adding
-                self.client.request_data(5, website)
-            else:
-                try:
+                self.client.request_data(5, website) # Send the website to the server
+            else: # Handle the case where the entry is empty
+                try: # Try to get the selected item from the listbox
                     selected_index = history_listbox.curselection()[0]
                     website = browsing_history[history_listbox.get(selected_index)]
                 except:
                     pass
 
-                if website:
-                    website_listbox.insert(tk.END, website)
-                    self.client.request_data(5, website)
+                if website: 
+                    website_listbox.insert(tk.END, website) 
+                    self.client.request_data(5, website) # Send the website to the server
 
         def on_remove_button_click():
             try:
@@ -466,23 +493,23 @@ class ClientApp:
         remove_button.place(relx=0.175, rely=0.61)
         
 
-        self.client.request_data(4)
+        self.client.request_data(4) # Request the browsing history and blocked sites list
 
         while True:
             web_blocker.update()
             web_blocker.update_idletasks()
 
-            if self.client.blocked_sites != -1 and self.client.browsing_history != -1:
+            if self.client.blocked_sites != -1 and self.client.browsing_history != -1: # Check if the data has been updated
                 website_list = self.client.blocked_sites
                 browsing_history = self.client.browsing_history
 
-                self.client.blocked_sites = -1
-                self.client.browsing_history = -1
+                self.client.blocked_sites = -1 # Reset the data for the next time
+                self.client.browsing_history = -1 # Reset the data for the next time
 
-                if len(website_list)>0:
+                if len(website_list)>0: # Add the blocked websites to the blocked sites listbox
                     for website in website_list:
                         website_listbox.insert(tk.END, website)
-                if len(browsing_history)>0:
+                if len(browsing_history)>0: # Add the browsing history to the history listbox
                     for site in browsing_history.keys():
                         history_listbox.insert(tk.END, site)
 

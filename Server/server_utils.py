@@ -35,18 +35,16 @@ class ActiveTime(Thread):
         
         If the user is not active for more than `self.STATE_CHANGE_DELAY` seconds, the `is_active` attribute is set to `False`. If the user becomes active again, the `is_active` attribute is set to `True`.
         """
-        last_input = GetLastInputInfo()
+        last_input = GetLastInputInfo() #last input time
         last_active = time.time()
 
         while True:
             time.sleep(1)
-            if GetLastInputInfo() == last_input:
-                #will run if user is not active
+            if GetLastInputInfo() == last_input: # User is active
                 not_active_delta = time.time()-last_active
-                if not_active_delta > self.STATE_CHANGE_DELAY:
+                if not_active_delta > self.STATE_CHANGE_DELAY: # If user is inactive for more than `self.STATE_CHANGE_DELAY` seconds
                     self.is_active = False
-            else:
-                #will run if user is active
+            else: # User is inactive
                 last_input = GetLastInputInfo()
                 last_active = time.time()
                 self.is_active = True
@@ -263,32 +261,32 @@ class Database:
         return result
     
     def get_today_active_time(self) -> float:
-            """
-            Returns the total active time for today.
-            
-            This method creates the "screentime" table if it doesn't already exist,
-            and then executes a SQL query to fetch the active_time value for the current date.
-            If a record exists, the active_time value is returned. If no record exists, 0 is returned.
-            
-            Returns:
-                result (float): The total active time for today in seconds.
-            """
-            self.create_screentime_table()
-            conn, cursor = self.connect_to_db()
+        """
+        Returns the total active time for today.
+        
+        This method creates the "screentime" table if it doesn't already exist,
+        and then executes a SQL query to fetch the active_time value for the current date.
+        If a record exists, the active_time value is returned. If no record exists, 0 is returned.
+        
+        Returns:
+            result (float): The total active time for today in seconds.
+        """
+        self.create_screentime_table()
+        conn, cursor = self.connect_to_db()
 
-            try:
-                today_date = datetime.now().strftime("%Y-%m-%d")
-                cursor.execute('''
-                    SELECT active_time FROM screentime WHERE date = ?
-                ''', (today_date,))
-                result = cursor.fetchone()
+        try:
+            today_date = datetime.now().strftime("%Y-%m-%d")
+            cursor.execute('''
+                SELECT active_time FROM screentime WHERE date = ?
+            ''', (today_date,))
+            result = cursor.fetchone()
 
-                if result:
-                    return result[0]
-                else:
-                    return 0
-            finally:
-                conn.close()
+            if result: # if the result is not None
+                return result[0]
+            else:
+                return 0
+        finally:
+            conn.close()
     
     def is_last_log_today(self) -> bool:
         """
@@ -308,7 +306,7 @@ class Database:
             ''')
             last_log_date = cursor.fetchone()[0]
             
-            if last_log_date is not None:
+            if last_log_date is not None: # if the result is not None
                 last_log_date = datetime.strptime(last_log_date, "%Y-%m-%d").date()
                 
                 # Check if the last log date is today
@@ -420,8 +418,8 @@ class Block(Thread):
         """
         Starts the block by disabling the keyboard, and setting up the block window.
         """
-        self.end_block_flag = False
-        self.block_state = True
+        self.end_block_flag = False # Reset the end block flag
+        self.block_state = True # Set the block state to True
         self.disable_keyboard()
         self.setup_window()
         self.enable_keyboard() 
@@ -432,8 +430,8 @@ class Block(Thread):
         The method uses a lock to ensure thread-safe access to the block state.
         """
         with self.block_lock:
-            self.end_block_flag = True
-            self.block_state = False
+            self.end_block_flag = True # Set the end block flag
+            self.block_state = False # Set the block state to False
 
     def setup_window(self):
         """
@@ -476,14 +474,13 @@ class Block(Thread):
             fg=palette['text_color']
         )
 
-        # tk.Button(self.root, text='exit', command=close).place(rely=0.95, relx=0.12, anchor='center')
         message.place(relx=0.5, rely=0.45, anchor='center')
         limit.place(relx=0.5, rely=0.55, anchor='center')
         logo.place(relx=0.5, rely=0.9, anchor='center')
 
         self.root.after(self.calculate_ms_delta(), self.root.destroy)
 
-        while not self.end_block_flag:
+        while not self.end_block_flag: # Run in a loop until the end block flag is set to True
             self.root.update()
             self.root.update_idletasks()
 
@@ -562,7 +559,7 @@ class Encryption():
         chunk_size = 86 
         encrypted_data = b""
 
-        for i in range(0, len(data), chunk_size):
+        for i in range(0, len(data), chunk_size): # Encrypt in chunks
             chunk = data[i:i + chunk_size]
             encrypted_chunk = cipher.encrypt(chunk)
             encrypted_data += encrypted_chunk
@@ -590,11 +587,12 @@ class Encryption():
         chunk_size = 128
         decrypted_message = b""
 
-        for i in range(0, len(ciphertext), chunk_size):
+        for i in range(0, len(ciphertext), chunk_size): # Decrypt in chunks
             chunk = ciphertext[i:i + chunk_size]
             decrypted_chunk = decrypt_cipher.decrypt(chunk)
             decrypted_message += decrypted_chunk
 
+        # Split the decrypted message into its components
         decrypted_message = decrypted_message.decode()
         type = decrypted_message[:1]
         cmmd = decrypted_message[1:2]
@@ -686,8 +684,7 @@ class TwoFactorAuthentication(Thread):
         label.pack()
         code_label.pack()
 
-        # Run the Tkinter event loop
-        while self.show:
+        while self.show: # Loop to update the code label with the current TOTP code
             code_label.config(text=self.generate_authenication_code())
             window.update()
             window.update_idletasks()
@@ -696,7 +693,7 @@ class TwoFactorAuthentication(Thread):
         """
         Displays the current Time-based One-Time Password (TOTP) code in a Tkinter window.
         """
-        if not self.show:
+        if not self.show: # Only create a new window if the current window is not already showing
             window_thread = threading.Thread(target=self.create_code_display)
             window_thread.start()
 
@@ -706,8 +703,8 @@ class TwoFactorAuthentication(Thread):
         
         This method sets the `show` flag to `False`, which causes the loop in the `create_code_display()` method to exit, effectively stopping the code display.
         """
-        if self.show:
-            self.show = False #stops the current instance of window
+        if self.show: # Only stop the current window if it is already showing
+            self.show = False
 
 class WebBlocker:
     """
@@ -867,8 +864,10 @@ class WebBlocker:
         user_dir = os.path.expanduser("~")
         history_db = os.path.join(user_dir, 'AppData', 'Local', 'Google', 'Chrome', 'User Data', 'Default', 'History')
 
+        # Extract the history data
         history_data = self.extract_history(history_db)
 
+        # Build the browsing history dictionary
         browsing_history = {}
         for url, title, last_visit_time in history_data:
             browsing_history[f"{last_visit_time} - {title}"] = url
@@ -887,10 +886,3 @@ class Screenshot:
         pic_bytes = pic.tobytes()
         compressed_pic = gzip.compress(pic_bytes)
         return pickle.dumps(compressed_pic)
-
-# conn, cursor = Database().connect_to_db()
-# cursor.execute('''
-#     DELETE FROM users
-# ''')
-# conn.commit()
-# conn.close()

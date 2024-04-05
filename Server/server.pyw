@@ -174,6 +174,31 @@ class Server():
         ciphertext = self.encryption.encrypt(self.socket_to_publickey[client], msg)
 
         return ciphertext
+    
+    def recvall(self, sock: socket.socket, size: int) -> bytes:
+        """
+        Receives the full contents of a socket up to the specified size.
+        
+        Args:
+            sock (socket.socket): The socket to receive data from.
+            size (int): The total number of bytes to receive.
+        
+        Returns:
+            bytes: The received data.
+        
+        Raises:
+            Exception: If not the full data was received.
+        """
+        received_chunks = []
+        buf_size = 1024
+        remaining = size
+        while remaining > 0:
+            received = sock.recv(min(remaining, buf_size))
+            if not received:
+                raise Exception('unexpected EOF')
+            received_chunks.append(received)
+            remaining -= len(received)
+        return b''.join(received_chunks)
 
     def start(self):
         """
@@ -199,7 +224,7 @@ class Server():
                     (connection, (ip, port)) = self.server_socket.accept()
                     self.client_sockets.append(connection)
                     print(f'new user connected {(ip, port)}')
-                    self.socket_to_publickey[connection] = self.encryption.recv_public_key(connection.recv(271))
+                    self.socket_to_publickey[connection] = self.encryption.recv_public_key(self.recvall(connection, 271))
                     connection.send(self.encryption.get_public_key())
 
                     if not self.database.check_user(ip):
@@ -214,23 +239,38 @@ class Server():
                         self.messages.append(('u', 2, '', [client]))
 
                 elif client in self.client_sockets:
-                    #receive messages from connected clients
-                    data_len = int(client.recv(8).decode())
-                    ciphertext = client.recv(data_len)
+                    # Receive messages from connected clients
+                    if client in self.rlist:
+                        try:
+                            data_len = int(self.recvall(client, 8).decode())
+                            ciphertext = self.recvall(client, data_len)
+                        except:
+                            return
 
-                    type, cmmd, msg = self.encryption.decrypt(ciphertext)
+                        type, cmmd, msg = self.encryption.decrypt(ciphertext)
 
-                    if msg == 'quit':
-                        self.client_sockets.remove(client)
-                        client.close()
-                        break
-                    
-                    if type == 'a':
-                        self.handle_authorization(msg, client)
-                    elif type == 'r':
-                        self.handle_commands(cmmd, msg, client)
+                        if msg == 'quit':
+                            self.client_sockets.remove(client)
+                            client.close()
+                            break
+                        
+                        if type == 'a':
+                            self.handle_authorization(msg, client)
+                        elif type == 'r':
+                            self.handle_commands(cmmd, msg, client)
 
-            self.send_messages()                       
+            self.send_messages()       
 
-a = Server('0.0.0.0', 8008)
-a.start()
+    def stop(self):
+        """
+        Stop the server by closing the server socket.
+        """
+        self.server_socket.close()                
+
+if __name__ == '__main__':
+    while True:
+        try:
+            a = Server('0.0.0.0', 8008)
+            a.start()
+        except:
+            a.stop()
