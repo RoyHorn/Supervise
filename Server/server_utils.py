@@ -12,6 +12,7 @@ import pickle
 import gzip
 import platform
 import os
+import re
 
 #color paletee
 palette = {
@@ -766,8 +767,9 @@ class WebBlocker:
 
                 # Extract URLs from each line
                 urls = [line.split()[1] for line in lines]
+                print(urls)
                 return urls
-
+        
         return []
 
     def update_file(self):
@@ -792,6 +794,8 @@ class WebBlocker:
         
         This method appends the provided domain to the `self.blocked_sites` list, and then calls the `update_file()` method to write the updated block list to the hosts file.
         """
+        # Strip the URL from the https:// at the beginning if it exists, and from the / at the end
+        domain = re.search(r'(?<=://)([^/]+)', domain).group(0)
 
         self.blocked_sites.append(domain)
         self.update_file()
@@ -805,6 +809,9 @@ class WebBlocker:
         
         This method removes the provided domain from the `self.blocked_sites` list, and then calls the `update_file()` method to write the updated block list to the hosts file.
         """
+
+        domain = re.search(r'(?<=://)([^/]+)', domain).group(0)
+        print(domain, self.blocked_sites)
         
         if domain in self.blocked_sites:
             self.blocked_sites.remove(domain)
