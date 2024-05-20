@@ -27,6 +27,9 @@ class ClientApp:
             else, it will show the login screen.
         """
         config = configparser.ConfigParser()
+        if not os.path.isfile('config.ini'):
+            with open('config.ini', 'w') as configfile:
+                configfile.write('[connection]\nlast_connected_ip=\nreconnect_automatically=False\n')
         config.read('config.ini')
 
         if config.getboolean('connection', 'reconnect_automatically'): # If the user selected to reconnect automatically to the last connected server
