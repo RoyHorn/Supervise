@@ -70,6 +70,9 @@ class ClientApp:
 
                 # Write the last connected ip to the file
                 config = configparser.ConfigParser()
+                if not os.path.isfile('config.ini'):
+                    with open('config.ini', 'w') as configfile:
+                        configfile.write('[connection]\nlast_connected_ip=\nreconnect_automatically=False\n')
                 config.read('config.ini')
                 config.set('connection', 'last_connected_ip', self.ip)
                 with open('config.ini', 'w') as configfile:
@@ -81,6 +84,9 @@ class ClientApp:
 
         def on_checkbox_toggle():
             config = configparser.ConfigParser()
+            if not os.path.isfile('config.ini'):
+                with open('config.ini', 'w') as configfile:
+                    configfile.write('[connection]\nlast_connected_ip=\nreconnect_automatically=False\n')
             config.read('config.ini')
 
             if reconnect_checkbox_var.get(): # If the reconnect checkbox is checked

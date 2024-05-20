@@ -2,7 +2,7 @@
 
 rem Run server.py in a separate PowerShell window with administrative privileges
 echo Running server.py with administrative privileges...
-powershell -Command "Start-Process 'python' -ArgumentList 'C:\Users\Roy\Documents\Supervise\Server\server.py' -Verb RunAs"
+powershell -Command "Start-Process 'python' -ArgumentList 'C:\Users\Roy\Documents\Supervise\Server\server.pyw' -Verb RunAs"
 
 rem Run client_app.py in a separate command prompt window (hidden)
 echo Running client_app.py with administrative privileges...
