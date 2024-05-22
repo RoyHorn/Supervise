@@ -195,6 +195,7 @@ class ClientApp:
             bg=palette['background_color'],
             fg=palette['text_color']
         )
+        
         screenshot_button = tk.Button(
             parental,
             text='Take Screenshot',
@@ -469,6 +470,13 @@ class ClientApp:
         web_blocker.title("Web Blocker")
         web_blocker['background'] = palette['background_color']
 
+        tutorial_label = tk.Label(
+            web_blocker,
+            text= 'ENTER URL IN THIS FORMAT: "http://www.example.com"',
+            font=("Calibri",20),
+            bg=palette['background_color'],
+            fg=palette['text_color']
+        )
         history_listbox = tk.Listbox(web_blocker, width=60, height=14)
         history_listbox.bind("<Double-Button>", on_browsing_history_listbox_click)
         website_listbox = tk.Listbox(web_blocker, width=22)
@@ -495,6 +503,7 @@ class ClientApp:
             border=0
         )
 
+        tutorial_label.place(relx=0.05, rely=0.1)
         history_listbox.place(relx=0.35, rely=0.2)
         website_listbox.place(relx=0.1, rely=0.2)
         website_entry.place(relx=0.1, rely=0.55)
@@ -525,6 +534,7 @@ class ClientApp:
 if __name__== '__main__':
     app = ClientApp()
     app.run()
+
  
 
 
