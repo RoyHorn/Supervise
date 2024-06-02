@@ -49,3 +49,34 @@
 2024-06-02 11:57:39,556 - INFO - Server stopped
 2024-06-02 11:57:40,715 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
 2024-06-02 11:57:40,731 - INFO - Server stopped
+2024-06-02 12:47:34,145 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 12:47:51,564 - INFO - New user connected ('127.0.0.1', 55638)
+2024-06-02 12:47:57,332 - INFO - (('127.0.0.1', 55638)) requested screenshot
+2024-06-02 12:48:22,458 - INFO - (('127.0.0.1', 55638)) started block
+2024-06-02 12:48:33,451 - INFO - (('127.0.0.1', 55638)) ended block
+2024-06-02 12:48:34,358 - INFO - (('127.0.0.1', 55638)) requested blocked sites list
+2024-06-02 12:48:40,165 - INFO - (('127.0.0.1', 55638)) requested screentime data
+2024-06-02 12:48:40,181 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=24.0
+2024-06-02 12:48:47,013 - INFO - (('127.0.0.1', 55638)) updated screentime limit: new_limit=0.001
+2024-06-02 12:48:49,077 - INFO - (('127.0.0.1', 55638)) requested screentime data
+2024-06-02 12:48:49,108 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=0.001
+2024-06-02 12:49:34,664 - INFO - server ended block - time limit exceeded
+2024-06-02 12:49:38,103 - INFO - (('127.0.0.1', 55638)) ended block
+2024-06-02 12:50:34,774 - INFO - server ended block - time limit exceeded
+2024-06-02 12:50:37,647 - INFO - (('127.0.0.1', 55638)) ended block
+2024-06-02 12:50:38,339 - INFO - (('127.0.0.1', 55638)) requested screentime data
+2024-06-02 12:50:38,389 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=0.001
+2024-06-02 12:50:41,943 - INFO - (('127.0.0.1', 55638)) updated screentime limit: new_limit=24
+2024-06-02 12:50:43,747 - INFO - (('127.0.0.1', 55638)) requested screentime data
+2024-06-02 12:50:43,794 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=24
+2024-06-02 12:51:31,542 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 12:51:44,057 - INFO - New user connected ('127.0.0.1', 56798)
+2024-06-02 12:52:07,842 - INFO - ('127.0.0.1', 56798) requested screenshot
+2024-06-02 12:53:13,405 - INFO - ('127.0.0.1', 56798) started block
+2024-06-02 12:53:13,575 - INFO - ('127.0.0.1', 56798) ended block
+2024-06-02 12:53:18,261 - INFO - ('127.0.0.1', 56798) requested blocked sites list
+2024-06-02 12:53:24,131 - INFO - ('127.0.0.1', 56798) requested screentime data
+2024-06-02 12:53:24,150 - INFO - ('127.0.0.1', 56798) requested screentime limit: limit=24.0
+2024-06-02 12:56:20,491 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 12:56:23,130 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+2024-06-02 12:56:23,130 - INFO - Server stopped

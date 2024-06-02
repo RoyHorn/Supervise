@@ -54,40 +54,41 @@ class Server:
         resolver(msg, client)
 
     def start_computer_block(self, msg, client):
-        logging.info(f"Start computer block: client={client.getpeername()}")
+        logging.info(f"%s started block" ,client.getpeername())
         self.messages.append(('u', 1, '', self.client_sockets.copy()))
         self.block.start()
 
     def end_computer_block(self, msg, client):
-        logging.info(f"End computer block: client={client.getpeername()}")
+        logging.info(f"%s ended block" ,client.getpeername())
         self.messages.append(('u', 2, '', self.client_sockets.copy()))
         self.block.end_block()
         self.block = Block()
 
     def take_screenshot(self, msg, client):
-        logging.info(f"Screenshot request: client={client.getpeername()}")
+        logging.info(f"%s requested screenshot" ,client.getpeername())
         image = Screenshot().screenshot()  # Assuming Screenshot is a defined class
         self.messages.append(('r', 3, image, [client]))
 
     def request_web_blocker_data(self, msg, client):
-        logging.info(f"Blocked sites request: client={client.getpeername()}")
+        logging.info("%s requested blocked sites list", client.getpeername())
         web_list = pickle.dumps(self.web_blocker.get_sites())
         browsing_history = pickle.dumps(self.web_blocker.build_history_string())
         self.messages.append(('r', 4, web_list, [client]))
         self.messages.append(('r', 4, browsing_history, [client]))
 
     def add_website_to_blocker(self, msg, client):
-        logging.info(f"Add website to blocker: domain={msg}, client={client.getpeername()}")
+        logging.info("%s added website to blocker (domain = %s)", client.getpeername(), msg)
         self.messages.append(('r', 5, msg, [client]))
         self.web_blocker.add_website(msg)
 
     def remove_website_from_blocker(self, msg, client):
-        logging.info(f"Remove website from blocker: domain={msg}, client={client.getpeername()}")
+        logging.info("%s removed website from blocker (domain = %s)", client.getpeername(), msg)
+
         self.messages.append(('r', 6, msg, [client]))
         self.web_blocker.remove_website(msg)
 
     def request_screentime_data(self, msg, client):
-        logging.info(f"Screentime data request: client={client.getpeername()}")
+        logging.info("%s requested screentime data", client.getpeername())
         today_date = datetime.datetime.now().strftime("%Y-%m-%d")
         time_active = self.active_time.get_active_time()
         self.database.log_screentime(today_date, time_active)
@@ -95,23 +96,23 @@ class Server:
         self.messages.append(('r', 7, screentime_data, [client]))
 
     def request_screentime_limit(self, msg, client):
-        logging.info(f"Screentime limit request: limit={self.time_limit}, client={client.getpeername()}")
+        logging.info("%s requested screentime limit", client.getpeername())
         self.messages.append(('r', 8, self.time_limit, [client]))
 
     def update_screentime_limit(self, msg, client):
-        logging.info(f"Update screentime limit: new_limit={msg}, client={client.getpeername()}")
+        logging.info("%s updated screentime limit (new_limit = %s)", client.getpeername(), msg)
         self.database.change_time_limit(msg)
         self.time_limit = msg
         self.messages.append(('r', 9, self.time_limit, [client]))
 
     def quit_client(self, msg, client):
-        logging.info(f"Client disconnected {client.getpeername()}")
+        logging.info(f"%s disconnected", client.getpeername())
         client.close()
         self.two_factor_auth.stop_code_display()
         self.client_sockets.remove(client)
 
     def default_response(self, msg, client):
-        logging.info(f"Default response: msg={msg}")
+        logging.info(f"%s default message" ,client.getpeername())
         self.messages.append(('r', 'default', msg, self.client_sockets.copy()))
 
     def handle_authorization(self, code: str, client: socket.socket):
@@ -133,8 +134,10 @@ class Server:
             if not self.database.is_last_log_today():
                 self.active_time.reset_active_time()
                 self.messages.append(('u', 2, '', self.client_sockets.copy()))
+                logging.info(f"Server ended block - a day had passed")
             if self.active_time.get_active_time() >= float(self.time_limit):
                 self.messages.append(('u', 1, '', self.client_sockets.copy()))
+                logging.info(f"Server started block - time limit exceeded")
                 self.block.start()
             time.sleep(60)
 
