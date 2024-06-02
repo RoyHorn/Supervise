@@ -1,0 +1,51 @@
+2024-06-02 11:30:52,155 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 11:31:18,131 - INFO - New user connected ('127.0.0.1', 63738)
+2024-06-02 11:31:32,664 - INFO - New user connected ('127.0.0.1', 63911)
+2024-06-02 11:31:41,120 - INFO - Taking screenshot
+2024-06-02 11:31:51,829 - INFO - Starting computer block
+2024-06-02 11:32:02,806 - INFO - Ending computer block
+2024-06-02 11:32:19,670 - INFO - Requesting web blocker data
+2024-06-02 11:32:36,878 - INFO - Adding website to blocker: domain=https://www.ynet.co.il
+2024-06-02 11:32:54,868 - INFO - Removing website from blocker: domain=https://www.ynet.co.il
+2024-06-02 11:33:05,012 - INFO - Adding website to blocker: domain=https://drive.google.com/drive/folders/1R9ShahNaSvXvOzgdsflF_w6toZI_b7bX
+2024-06-02 11:34:08,434 - INFO - Quitting client
+2024-06-02 11:34:16,901 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 11:34:56,435 - INFO - New user connected ('127.0.0.1', 49987)
+2024-06-02 11:35:00,625 - INFO - Requesting web blocker data
+2024-06-02 11:35:03,396 - INFO - Removing website from blocker: domain=drive.google.com
+2024-06-02 11:35:03,396 - ERROR - Server stopped with error: 'NoneType' object has no attribute 'group'
+2024-06-02 11:35:03,396 - INFO - Server stopped
+2024-06-02 11:35:03,899 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 11:47:15,500 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 11:47:23,210 - INFO - New user connected ('127.0.0.1', 58067)
+2024-06-02 11:47:28,523 - INFO - Taking screenshot
+2024-06-02 11:47:37,041 - INFO - Starting computer block
+2024-06-02 11:48:06,138 - INFO - Ending computer block
+2024-06-02 11:48:07,156 - INFO - Quitting client
+2024-06-02 11:48:14,711 - INFO - New user connected ('127.0.0.1', 58653)
+2024-06-02 11:52:58,299 - INFO - Server started on 0.0.0.0:8008
+2024-06-02 11:53:10,843 - INFO - New user connected ('127.0.0.1', 63635)
+2024-06-02 11:53:24,490 - INFO - Web blocker blocked sites request: client=('127.0.0.1', 63635)
+2024-06-02 11:54:01,565 - INFO - Removing website from blocker: domain=drive.google.com, client=('127.0.0.1', 63635)
+2024-06-02 11:55:29,347 - INFO - Web blocker blocked sites request: client=('127.0.0.1', 63635)
+2024-06-02 11:55:40,388 - INFO - Adding website to blocker: domain=https://www.ynet.co.il, client=('127.0.0.1', 63635)
+2024-06-02 11:55:55,884 - INFO - Web blocker blocked sites request: client=('127.0.0.1', 63635)
+2024-06-02 11:56:02,867 - INFO - Removing website from blocker: domain=www.ynet.co.il, client=('127.0.0.1', 63635)
+2024-06-02 11:56:11,041 - INFO - Screentime data request: client=('127.0.0.1', 63635)
+2024-06-02 11:56:11,054 - INFO - Screentime limit request: limit=24, client=('127.0.0.1', 63635)
+2024-06-02 11:56:18,907 - INFO - Updating screentime limit: new_limit=0.001, client=('127.0.0.1', 63635)
+2024-06-02 11:56:21,968 - INFO - Screentime data request: client=('127.0.0.1', 63635)
+2024-06-02 11:56:21,997 - INFO - Screentime limit request: limit=0.001, client=('127.0.0.1', 63635)
+2024-06-02 11:57:09,858 - INFO - Ending computer block: client=('127.0.0.1', 63635)
+2024-06-02 11:57:11,035 - INFO - Screentime data request: client=('127.0.0.1', 63635)
+2024-06-02 11:57:11,082 - INFO - Screentime limit request: limit=0.001, client=('127.0.0.1', 63635)
+2024-06-02 11:57:14,647 - INFO - Updating screentime limit: new_limit=24, client=('127.0.0.1', 63635)
+2024-06-02 11:57:37,041 - ERROR - Error receiving data from client
+2024-06-02 11:57:37,449 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+2024-06-02 11:57:37,464 - INFO - Server stopped
+2024-06-02 11:57:38,376 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+2024-06-02 11:57:38,376 - INFO - Server stopped
+2024-06-02 11:57:39,540 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+2024-06-02 11:57:39,556 - INFO - Server stopped
+2024-06-02 11:57:40,715 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+2024-06-02 11:57:40,731 - INFO - Server stopped

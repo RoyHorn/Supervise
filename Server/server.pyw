@@ -14,7 +14,7 @@ from utils.screenshot import Screenshot
 from utils.two_factor_authentication import TwoFactorAuthentication
 from utils.web_blocker import WebBlocker
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='server.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Server:
     def __init__(self, host, port, results):
@@ -54,40 +54,40 @@ class Server:
         resolver(msg, client)
 
     def start_computer_block(self, msg, client):
-        logging.info(f"Starting computer block")
+        logging.info(f"Start computer block: client={client.getpeername()}")
         self.messages.append(('u', 1, '', self.client_sockets.copy()))
         self.block.start()
 
     def end_computer_block(self, msg, client):
-        logging.info(f"Ending computer block")
+        logging.info(f"End computer block: client={client.getpeername()}")
         self.messages.append(('u', 2, '', self.client_sockets.copy()))
         self.block.end_block()
         self.block = Block()
 
     def take_screenshot(self, msg, client):
-        logging.info(f"Taking screenshot")
+        logging.info(f"Screenshot request: client={client.getpeername()}")
         image = Screenshot().screenshot()  # Assuming Screenshot is a defined class
         self.messages.append(('r', 3, image, [client]))
 
     def request_web_blocker_data(self, msg, client):
-        logging.info(f"Requesting web blocker data")
+        logging.info(f"Blocked sites request: client={client.getpeername()}")
         web_list = pickle.dumps(self.web_blocker.get_sites())
         browsing_history = pickle.dumps(self.web_blocker.build_history_string())
         self.messages.append(('r', 4, web_list, [client]))
         self.messages.append(('r', 4, browsing_history, [client]))
 
     def add_website_to_blocker(self, msg, client):
-        logging.info(f"Adding website to blocker: domain={msg}")
+        logging.info(f"Add website to blocker: domain={msg}, client={client.getpeername()}")
         self.messages.append(('r', 5, msg, [client]))
         self.web_blocker.add_website(msg)
 
     def remove_website_from_blocker(self, msg, client):
-        logging.info(f"Removing website from blocker: domain={msg}")
+        logging.info(f"Remove website from blocker: domain={msg}, client={client.getpeername()}")
         self.messages.append(('r', 6, msg, [client]))
         self.web_blocker.remove_website(msg)
 
     def request_screentime_data(self, msg, client):
-        logging.info(f"Requesting screentime data")
+        logging.info(f"Screentime data request: client={client.getpeername()}")
         today_date = datetime.datetime.now().strftime("%Y-%m-%d")
         time_active = self.active_time.get_active_time()
         self.database.log_screentime(today_date, time_active)
@@ -95,19 +95,19 @@ class Server:
         self.messages.append(('r', 7, screentime_data, [client]))
 
     def request_screentime_limit(self, msg, client):
-        logging.info(f"Requesting screentime limit: msg={msg}")
+        logging.info(f"Screentime limit request: limit={self.time_limit}, client={client.getpeername()}")
         self.messages.append(('r', 8, self.time_limit, [client]))
 
     def update_screentime_limit(self, msg, client):
-        logging.info(f"Updating screentime limit: msg={msg}")
+        logging.info(f"Update screentime limit: new_limit={msg}, client={client.getpeername()}")
         self.database.change_time_limit(msg)
         self.time_limit = msg
         self.messages.append(('r', 9, self.time_limit, [client]))
 
     def quit_client(self, msg, client):
-        logging.info(f"Quitting client")
+        logging.info(f"Client disconnected {client.getpeername()}")
         client.close()
-        self.two_factor_auth.stop_code_display()  # Assuming two_factor_auth is defined
+        self.two_factor_auth.stop_code_display()
         self.client_sockets.remove(client)
 
     def default_response(self, msg, client):

@@ -91,11 +91,13 @@ class WebBlocker:
         This method appends the provided domain to the `self.blocked_sites` list, and then calls the `update_file()` method to write the updated block list to the hosts file.
         """
         # Strip the URL from the https:// at the beginning if it exists, and from the / at the end
-        stripped_domain = re.search(r'(?<=://)([^/]+)', domain).group(0)
-        domain = stripped_domain if stripped_domain is not None else domain
+        match = re.search(r'(?<=://)([^/]+)', domain)
+        if match:
+            domain = match.group(0)
 
-        self.blocked_sites.append(domain)
-        self.update_file()
+        if domain not in self.blocked_sites:
+            self.blocked_sites.append(domain)
+            self.update_file()
 
     def remove_website(self, domain: str):
         """
@@ -107,8 +109,10 @@ class WebBlocker:
         This method removes the provided domain from the `self.blocked_sites` list, and then calls the `update_file()` method to write the updated block list to the hosts file.
         """
 
-        domain = re.search(r'(?<=://)([^/]+)', domain).group(0)
-        
+        match = re.search(r'(?<=://)([^/]+)', domain)
+        if match:
+            domain = match.group(0)
+
         if domain in self.blocked_sites:
             self.blocked_sites.remove(domain)
             self.update_file()
