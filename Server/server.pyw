@@ -103,6 +103,10 @@ class Server:
         logging.info("%s updated screentime limit (new_limit = %s)", client.getpeername(), msg)
         self.database.change_time_limit(msg)
         self.time_limit = msg
+
+        if float(self.time_limit) >= self.active_time.get_active_time():
+            self.end_computer_block('', client)
+
         self.messages.append(('r', 9, self.time_limit, [client]))
 
     def quit_client(self, msg, client):
@@ -131,14 +135,18 @@ class Server:
             if time_now.minute % 1 == 0:
                 self.active_time.log_active_time()
                 self.web_blocker.update_file()
+
             if not self.database.is_last_log_today():
                 self.active_time.reset_active_time()
                 self.messages.append(('u', 2, '', self.client_sockets.copy()))
                 logging.info(f"Server ended block - a day had passed")
+
             if self.active_time.get_active_time() >= float(self.time_limit):
                 self.messages.append(('u', 1, '', self.client_sockets.copy()))
-                logging.info(f"Server started block - time limit exceeded")
-                self.block.start()
+                if not self.block.block_state:
+                    logging.info(f"Server started block - time limit exceeded")
+                    self.block.start()
+
             time.sleep(60)
 
     def format_message(self, type: str, cmmd: str, data: str, client: socket.socket) -> bytes:
@@ -179,10 +187,10 @@ class Server:
                         self.two_factor_auth.display_code()
                     else:
                         self.messages.append(('a', 1, '', [connection]))
-                    if self.block.get_block_state():
-                        self.messages.append(('u', 1, '', [client]))
+                    if self.block.block_state:
+                        self.messages.append(('u', 1, '', [connection]))
                     else:
-                        self.messages.append(('u', 2, '', [client]))
+                        self.messages.append(('u', 2, '', [connection]))
                 elif client in self.client_sockets:
                     if client in self.rlist:
                         try:

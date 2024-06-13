@@ -62,7 +62,7 @@ class Client(Thread):
             return
 
         type, cmmd, data = self.encryption.decrypt(ciphertext)
-
+        
         if type == 'a':
             self.handle_authorization(cmmd, data)
         elif type == 'r':
@@ -199,6 +199,8 @@ class Client(Thread):
         self.block_button = block_button
 
     def set_block_button_text(self, data):
+        while self.block_button is None:
+            pass
         self.block_button.config(text=data)
 
     def close_client(self):

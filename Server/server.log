@@ -1,82 +1,69 @@
-2024-06-02 11:30:52,155 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 11:31:18,131 - INFO - New user connected ('127.0.0.1', 63738)
-2024-06-02 11:31:32,664 - INFO - New user connected ('127.0.0.1', 63911)
-2024-06-02 11:31:41,120 - INFO - Taking screenshot
-2024-06-02 11:31:51,829 - INFO - Starting computer block
-2024-06-02 11:32:02,806 - INFO - Ending computer block
-2024-06-02 11:32:19,670 - INFO - Requesting web blocker data
-2024-06-02 11:32:36,878 - INFO - Adding website to blocker: domain=https://www.ynet.co.il
-2024-06-02 11:32:54,868 - INFO - Removing website from blocker: domain=https://www.ynet.co.il
-2024-06-02 11:33:05,012 - INFO - Adding website to blocker: domain=https://drive.google.com/drive/folders/1R9ShahNaSvXvOzgdsflF_w6toZI_b7bX
-2024-06-02 11:34:08,434 - INFO - Quitting client
-2024-06-02 11:34:16,901 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 11:34:56,435 - INFO - New user connected ('127.0.0.1', 49987)
-2024-06-02 11:35:00,625 - INFO - Requesting web blocker data
-2024-06-02 11:35:03,396 - INFO - Removing website from blocker: domain=drive.google.com
-2024-06-02 11:35:03,396 - ERROR - Server stopped with error: 'NoneType' object has no attribute 'group'
-2024-06-02 11:35:03,396 - INFO - Server stopped
-2024-06-02 11:35:03,899 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 11:47:15,500 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 11:47:23,210 - INFO - New user connected ('127.0.0.1', 58067)
-2024-06-02 11:47:28,523 - INFO - Taking screenshot
-2024-06-02 11:47:37,041 - INFO - Starting computer block
-2024-06-02 11:48:06,138 - INFO - Ending computer block
-2024-06-02 11:48:07,156 - INFO - Quitting client
-2024-06-02 11:48:14,711 - INFO - New user connected ('127.0.0.1', 58653)
-2024-06-02 11:52:58,299 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 11:53:10,843 - INFO - New user connected ('127.0.0.1', 63635)
-2024-06-02 11:53:24,490 - INFO - Web blocker blocked sites request: client=('127.0.0.1', 63635)
-2024-06-02 11:54:01,565 - INFO - Removing website from blocker: domain=drive.google.com, client=('127.0.0.1', 63635)
-2024-06-02 11:55:29,347 - INFO - Web blocker blocked sites request: client=('127.0.0.1', 63635)
-2024-06-02 11:55:40,388 - INFO - Adding website to blocker: domain=https://www.ynet.co.il, client=('127.0.0.1', 63635)
-2024-06-02 11:55:55,884 - INFO - Web blocker blocked sites request: client=('127.0.0.1', 63635)
-2024-06-02 11:56:02,867 - INFO - Removing website from blocker: domain=www.ynet.co.il, client=('127.0.0.1', 63635)
-2024-06-02 11:56:11,041 - INFO - Screentime data request: client=('127.0.0.1', 63635)
-2024-06-02 11:56:11,054 - INFO - Screentime limit request: limit=24, client=('127.0.0.1', 63635)
-2024-06-02 11:56:18,907 - INFO - Updating screentime limit: new_limit=0.001, client=('127.0.0.1', 63635)
-2024-06-02 11:56:21,968 - INFO - Screentime data request: client=('127.0.0.1', 63635)
-2024-06-02 11:56:21,997 - INFO - Screentime limit request: limit=0.001, client=('127.0.0.1', 63635)
-2024-06-02 11:57:09,858 - INFO - Ending computer block: client=('127.0.0.1', 63635)
-2024-06-02 11:57:11,035 - INFO - Screentime data request: client=('127.0.0.1', 63635)
-2024-06-02 11:57:11,082 - INFO - Screentime limit request: limit=0.001, client=('127.0.0.1', 63635)
-2024-06-02 11:57:14,647 - INFO - Updating screentime limit: new_limit=24, client=('127.0.0.1', 63635)
-2024-06-02 11:57:37,041 - ERROR - Error receiving data from client
-2024-06-02 11:57:37,449 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-2024-06-02 11:57:37,464 - INFO - Server stopped
-2024-06-02 11:57:38,376 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-2024-06-02 11:57:38,376 - INFO - Server stopped
-2024-06-02 11:57:39,540 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-2024-06-02 11:57:39,556 - INFO - Server stopped
-2024-06-02 11:57:40,715 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-2024-06-02 11:57:40,731 - INFO - Server stopped
-2024-06-02 12:47:34,145 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 12:47:51,564 - INFO - New user connected ('127.0.0.1', 55638)
-2024-06-02 12:47:57,332 - INFO - (('127.0.0.1', 55638)) requested screenshot
-2024-06-02 12:48:22,458 - INFO - (('127.0.0.1', 55638)) started block
-2024-06-02 12:48:33,451 - INFO - (('127.0.0.1', 55638)) ended block
-2024-06-02 12:48:34,358 - INFO - (('127.0.0.1', 55638)) requested blocked sites list
-2024-06-02 12:48:40,165 - INFO - (('127.0.0.1', 55638)) requested screentime data
-2024-06-02 12:48:40,181 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=24.0
-2024-06-02 12:48:47,013 - INFO - (('127.0.0.1', 55638)) updated screentime limit: new_limit=0.001
-2024-06-02 12:48:49,077 - INFO - (('127.0.0.1', 55638)) requested screentime data
-2024-06-02 12:48:49,108 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=0.001
-2024-06-02 12:49:34,664 - INFO - server ended block - time limit exceeded
-2024-06-02 12:49:38,103 - INFO - (('127.0.0.1', 55638)) ended block
-2024-06-02 12:50:34,774 - INFO - server ended block - time limit exceeded
-2024-06-02 12:50:37,647 - INFO - (('127.0.0.1', 55638)) ended block
-2024-06-02 12:50:38,339 - INFO - (('127.0.0.1', 55638)) requested screentime data
-2024-06-02 12:50:38,389 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=0.001
-2024-06-02 12:50:41,943 - INFO - (('127.0.0.1', 55638)) updated screentime limit: new_limit=24
-2024-06-02 12:50:43,747 - INFO - (('127.0.0.1', 55638)) requested screentime data
-2024-06-02 12:50:43,794 - INFO - (('127.0.0.1', 55638)) requested screentime limit: limit=24
-2024-06-02 12:51:31,542 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 12:51:44,057 - INFO - New user connected ('127.0.0.1', 56798)
-2024-06-02 12:52:07,842 - INFO - ('127.0.0.1', 56798) requested screenshot
-2024-06-02 12:53:13,405 - INFO - ('127.0.0.1', 56798) started block
-2024-06-02 12:53:13,575 - INFO - ('127.0.0.1', 56798) ended block
-2024-06-02 12:53:18,261 - INFO - ('127.0.0.1', 56798) requested blocked sites list
-2024-06-02 12:53:24,131 - INFO - ('127.0.0.1', 56798) requested screentime data
-2024-06-02 12:53:24,150 - INFO - ('127.0.0.1', 56798) requested screentime limit: limit=24.0
-2024-06-02 12:56:20,491 - INFO - Server started on 0.0.0.0:8008
-2024-06-02 12:56:23,130 - ERROR - Server stopped with error: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
-2024-06-02 12:56:23,130 - INFO - Server stopped
+2024-06-13 15:03:06,713 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:03:32,092 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:04:17,801 - INFO - New user connected ('127.0.0.1', 59108)
+2024-06-13 15:04:22,206 - INFO - ('127.0.0.1', 59108) started block
+2024-06-13 15:04:26,004 - INFO - ('127.0.0.1', 59108) ended block
+2024-06-13 15:04:27,455 - INFO - ('127.0.0.1', 59108) requested screentime data
+2024-06-13 15:04:27,500 - INFO - ('127.0.0.1', 59108) requested screentime limit
+2024-06-13 15:04:40,418 - INFO - ('127.0.0.1', 59108) updated screentime limit (new_limit = 0.001)
+2024-06-13 15:04:40,436 - ERROR - Server stopped with error: '>=' not supported between instances of 'str' and 'float'
+2024-06-13 15:04:40,436 - INFO - Server stopped
+2024-06-13 15:04:40,880 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:04:41,085 - INFO - Server started block - time limit exceeded
+2024-06-13 15:07:25,460 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:07:25,981 - INFO - Server started block - time limit exceeded
+2024-06-13 15:07:54,131 - INFO - New user connected ('127.0.0.1', 64399)
+2024-06-13 15:08:04,512 - INFO - ('127.0.0.1', 64399) ended block
+2024-06-13 15:08:07,381 - INFO - ('127.0.0.1', 64399) requested screentime data
+2024-06-13 15:08:07,414 - INFO - ('127.0.0.1', 64399) requested screentime limit
+2024-06-13 15:08:26,031 - INFO - Server started block - time limit exceeded
+2024-06-13 15:08:36,023 - INFO - ('127.0.0.1', 64399) ended block
+2024-06-13 15:08:46,707 - INFO - ('127.0.0.1', 64399) requested screentime data
+2024-06-13 15:08:46,742 - INFO - ('127.0.0.1', 64399) requested screentime limit
+2024-06-13 15:09:26,198 - INFO - Server started block - time limit exceeded
+2024-06-13 15:09:28,769 - INFO - ('127.0.0.1', 64399) updated screentime limit (new_limit = 24)
+2024-06-13 15:09:28,781 - INFO - ('127.0.0.1', 64399) ended block
+2024-06-13 15:09:40,714 - INFO - ('127.0.0.1', 64399) updated screentime limit (new_limit = 24)
+2024-06-13 15:09:40,714 - INFO - ('127.0.0.1', 64399) ended block
+2024-06-13 15:09:47,883 - INFO - ('127.0.0.1', 64399) started block
+2024-06-13 15:10:01,897 - INFO - ('127.0.0.1', 64399) updated screentime limit (new_limit = 24)
+2024-06-13 15:10:01,898 - INFO - ('127.0.0.1', 64399) ended block
+2024-06-13 15:10:51,379 - INFO - ('127.0.0.1', 64399) disconnected
+2024-06-13 15:11:16,426 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:11:39,467 - INFO - New user connected ('127.0.0.1', 53352)
+2024-06-13 15:11:46,088 - INFO - ('127.0.0.1', 53352) started block
+2024-06-13 15:11:48,639 - INFO - ('127.0.0.1', 53352) requested screentime data
+2024-06-13 15:11:48,681 - INFO - ('127.0.0.1', 53352) requested screentime limit
+2024-06-13 15:11:50,519 - INFO - ('127.0.0.1', 53352) updated screentime limit (new_limit = 24.0)
+2024-06-13 15:11:50,523 - INFO - ('127.0.0.1', 53352) ended block
+2024-06-13 15:12:38,007 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:12:45,680 - INFO - New user connected ('127.0.0.1', 54914)
+2024-06-13 15:12:50,264 - INFO - ('127.0.0.1', 54914) started block
+2024-06-13 15:12:52,872 - INFO - ('127.0.0.1', 54914) requested screentime data
+2024-06-13 15:12:52,908 - INFO - ('127.0.0.1', 54914) requested screentime limit
+2024-06-13 15:13:08,054 - INFO - ('127.0.0.1', 54914) updated screentime limit (new_limit = 24.0)
+2024-06-13 15:13:31,002 - INFO - ('127.0.0.1', 54914) ended block
+2024-06-13 15:13:45,096 - INFO - ('127.0.0.1', 54914) disconnected
+2024-06-13 15:14:10,019 - INFO - Server started on 0.0.0.0:8008
+2024-06-13 15:14:17,889 - INFO - New user connected ('127.0.0.1', 57097)
+2024-06-13 15:14:25,786 - INFO - ('127.0.0.1', 57097) started block
+2024-06-13 15:15:25,408 - INFO - ('127.0.0.1', 57097) requested screentime data
+2024-06-13 15:15:25,444 - INFO - ('127.0.0.1', 57097) requested screentime limit
+2024-06-13 15:15:34,388 - INFO - ('127.0.0.1', 57097) ended block
+2024-06-13 15:15:50,912 - INFO - ('127.0.0.1', 57097) updated screentime limit (new_limit = 0.001)
+2024-06-13 15:16:10,659 - INFO - Server started block - time limit exceeded
+2024-06-13 15:16:14,241 - INFO - ('127.0.0.1', 57097) updated screentime limit (new_limit = 24)
+2024-06-13 15:16:14,276 - INFO - ('127.0.0.1', 57097) ended block
+2024-06-13 15:16:37,854 - INFO - ('127.0.0.1', 57097) requested blocked sites list
+2024-06-13 15:16:50,009 - INFO - ('127.0.0.1', 57097) added website to blocker (domain = https://www.ynet.co.il)
+2024-06-13 15:16:57,506 - INFO - ('127.0.0.1', 57097) removed website from blocker (domain = https://www.ynet.co.il)
+2024-06-13 15:17:06,346 - INFO - ('127.0.0.1', 57097) requested screenshot
+2024-06-13 15:17:48,553 - INFO - ('127.0.0.1', 57097) started block
+2024-06-13 15:17:56,388 - INFO - ('127.0.0.1', 57097) ended block
+2024-06-13 15:18:07,266 - INFO - ('127.0.0.1', 57097) requested screentime data
+2024-06-13 15:18:07,294 - INFO - ('127.0.0.1', 57097) requested screentime limit
+2024-06-13 15:18:16,123 - INFO - ('127.0.0.1', 57097) updated screentime limit (new_limit = 0.001)
+2024-06-13 15:19:10,986 - INFO - Server started block - time limit exceeded
+2024-06-13 15:19:13,745 - INFO - ('127.0.0.1', 57097) updated screentime limit (new_limit = 24)
+2024-06-13 15:19:13,763 - INFO - ('127.0.0.1', 57097) ended block
+2024-06-13 15:19:37,227 - INFO - Server stopped
