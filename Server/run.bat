@@ -24,7 +24,7 @@ if '%errorlevel%' NEQ '0' (
 :: The main script starts here
 
 :: Change the path below to the path of your script
-set scriptPath="C:\Users\Roy\Documents\Supervise\Server\server.pyw"
+set scriptPath="C:\Users\Roy\Documents\Supervise\Server\server.py"
 
 :: Open the script with Python
 python %scriptPath%

@@ -37,7 +37,6 @@ class Client(Thread):
         
         # Check for any incoming data from the server
         self.rlist, self.wlist, self.xlist = select.select([self.client_socket], [self.client_socket], [])
-        print(self.rlist)
         if self.client_socket in self.rlist:
             self.receive_messages()
 
@@ -105,18 +104,14 @@ class Client(Thread):
 
         if cmmd == '0': #0 - authorization needed
             self.auth_needed = 1
-            print('a')
         elif cmmd == '1': #1 - authorization not needed
             self.auth_needed = 0
         elif cmmd == '2': #2 - authorization response from the server
             if data.decode() == 'T': #2T - authorization succeded
                 self.auth_succeded = 1
-                print('b')
             else: #2F - authorization failed
                 self.auth_succeded = 0
-                print('c')
     
-
     def handle_response(self, cmmd, data):
         """Handles response commands and data sent from the server."""
 

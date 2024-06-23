@@ -144,7 +144,6 @@ class Server:
             client_ip, _ = client.getpeername()
             self.database.insert_user(client_ip)
         else:
-            print('y')
             self.messages.append(('a', 2, 'F', [client]))
             self.client_sockets.remove(client)
         self.two_factor_auth.stop_code_display()
@@ -233,6 +232,7 @@ class Server:
         This method is responsible for the core server functionality and is run in a separate thread.
         """
 
+        logging.info('Server started')
         threading.Thread(target=self.update_handler).start()
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
@@ -245,7 +245,7 @@ class Server:
                     #accept new users
                     (connection, (ip, port)) = self.server_socket.accept()
                     self.client_sockets.append(connection)
-                    print(f'new user connected {(ip, port)}')
+                    logging.info(f'{(ip, port)} connected')
                     self.socket_to_publickey[connection] = self.encryption.recv_public_key(self.recvall(connection, 271))
                     connection.send(self.encryption.get_public_key())
 

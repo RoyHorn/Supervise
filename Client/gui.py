@@ -274,7 +274,6 @@ class Gui:
             entered_code = str(code_entry.get())
             if entered_code:
                 self.client.request_data(1 ,data=entered_code ,type='a') # Sends the entered to the server for check
-                print(self.client.messages)
                 root.destroy()
                 while self.client.auth_succeded == -1: # Wait for the server to respond
                     pass
