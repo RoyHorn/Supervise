@@ -16,7 +16,7 @@ class Client(Thread):
         self.rlist = [] # select.select read list - list of the sockets who sent data
         self.wlist = [] # select.select write list - list of the sockets that can recv data
         self.xlist = [] # select.select error list - list of the sockets that has errors
-        self.encryption = Encryption() 
+        self.encryption = Encryption()
         self.server_public_key = ''
         self.messages = [] # each place (command, data)
         self.messages_lock = threading.Lock()
@@ -37,10 +37,11 @@ class Client(Thread):
         
         # Check for any incoming data from the server
         self.rlist, self.wlist, self.xlist = select.select([self.client_socket], [self.client_socket], [])
+        print(self.rlist)
         if self.client_socket in self.rlist:
             self.receive_messages()
 
-        # Check for any outgoing data to the server
+        # Send any outgoing data to the server
         for type, cmmd, data in self.messages:
             cipher = self.format_message(type, cmmd, data)
             self.client_socket.send(str(len(cipher)).zfill(8).encode())
@@ -104,13 +105,16 @@ class Client(Thread):
 
         if cmmd == '0': #0 - authorization needed
             self.auth_needed = 1
+            print('a')
         elif cmmd == '1': #1 - authorization not needed
             self.auth_needed = 0
         elif cmmd == '2': #2 - authorization response from the server
             if data.decode() == 'T': #2T - authorization succeded
                 self.auth_succeded = 1
+                print('b')
             else: #2F - authorization failed
                 self.auth_succeded = 0
+                print('c')
     
 
     def handle_response(self, cmmd, data):
@@ -171,7 +175,7 @@ class Client(Thread):
         type: The type of request (default 'r' for response).
         """
 
-        with self.messages_lock:
+        with threading.Lock():
             self.messages.append((type, cmmd, data))
 
     def show_screenshot(self, data):
